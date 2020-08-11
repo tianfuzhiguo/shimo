@@ -5,3 +5,4 @@
 
 由于github不支持大文件上传，打包好的客户端放在百度网盘上，客户端所需要的配置文件和用例模板在demo文件夹中，
 链接: https://pan.baidu.com/s/10TCV1ZwkneGKLimVaxZGPw 提取码: wkh4
+链接: https://pan.baidu.com/s/1DeGCN0fnkBwH105zJy62Rg 提取码: 42jn
