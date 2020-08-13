@@ -6,5 +6,5 @@ python接口自动化测试
 
 图片显示不了，详细介绍请转至https://testerhome.com/topics/25078
 
-由于github不支持大文件上传，打包好的客户端放在百度网盘上，客户端所需要的配置文件和用例模板在demo文件夹中，
+由于github不支持大文件上传，打包好的客户端放在百度网盘上，
 链接: https://pan.baidu.com/s/1iAcIexEl1HXwryPm9OMIfQ 提取码: npbe
