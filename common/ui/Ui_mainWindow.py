@@ -15,10 +15,10 @@ class Ui_mainWindow(object):
     
     def setupUi(self, mainWindow):
         mainWindow.setObjectName("mainWindow")
-        mainWindow.resize(650, 600)
+        mainWindow.resize(800, 600)
         mainWindow.setIconSize(QtCore.QSize(12, 24))
         self.centralwidget = QtWidgets.QWidget(mainWindow)
-        mainWindow.setMinimumSize(650, 600)
+        mainWindow.setMinimumSize(800, 600)
 #         mainWindow.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)  窗口置顶
         self.example=ComboCheckBox(mainWindow)
         self.console=TextEdit(mainWindow)
@@ -208,10 +208,11 @@ class Ui_mainWindow(object):
         '''
         @控制台背景图
         '''
-        img1=self.resource_path("source/1.png")
-        img1=img1.replace('\\','/')
-        img1="background-image: url("+img1+");"
-        self.console.setStyleSheet(img1)
+        self.console.setStyleSheet("background:rgb(232, 242, 233)")
+#         img1=self.resource_path("source/1.png")
+#         img1=img1.replace('\\','/')
+#         img1="background-image: url("+img1+");"
+#         self.console.setStyleSheet(img1)
 
         self.successNum.setStyleSheet("font: 12pt 'Arial';color: green;")
         self.failNum.setStyleSheet("font: 12pt 'Arial';color: rgb(255,0,0);")
