@@ -286,7 +286,15 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                 @模板校验通过
                 '''
                 if rpt=='':
-                    exa=ex.example.currentText()#选中的用例
+                    #获取被选中的用例
+                    exa=ex.example.currentText()
+                    exa=exa.replace('(', '')
+                    exa=exa.replace(')','')
+                    exa=exa.replace(',','')
+                    exa=exa.split("'")
+                    for value in exa:
+                        if value=='':
+                            exa.remove(value)
                     exa=[int(i) for i in exa if i.isdigit()]
                     self.example.clear()
                     self.example.items.clear()
