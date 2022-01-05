@@ -287,11 +287,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                 '''
                 if rpt=='':
                     #获取被选中的用例
-                    exa=ex.example.currentText()
-                    exa=exa.replace('(', '')
-                    exa=exa.replace(')','')
-                    exa=exa.replace(',','')
-                    exa=exa.split("'")
+                    exa=str(ex.example.currentText()).replace('(', '').replace(')','').replace(',','').split("'")
                     for value in exa:
                         if value=='':
                             exa.remove(value)
@@ -444,8 +440,9 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             ex.console.append("<font color=\"#000000\"></font>")
             ex.console.append("<font color=\"#000000\">"+'邮件发送中...'+"</font>")
             try:
-                yag = yagmail.SMTP( user=email[0], password=email[2], host=email[1])
-                yag.send(eval(email[3]),email[4],email[5],[htmlReportName])
+                yag=yagmail.SMTP( user=email[0], password=email[2], host=email[1])
+                receList=email[3].split(',')
+                yag.send(receList,email[4],email[5],[htmlReportName])
                 ex.console.append("<font color=\"#000000\">"+'邮件发送成功'+"</font>")
                 yag.close()
             except Exception as e:
