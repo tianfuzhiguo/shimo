@@ -1,31 +1,22 @@
-import time
-import datetime
-import sys
-import os
-from common.utils.Log import *
-from common.init.Init import Init
 from common.excel.Write import Write
+from common.excel.Report import Report
 from common.excel.Template import Template
-from common.utils.Log import initLog
-from common.utils.Util import getValue,readExcel,getSheetNames,findStr
-import yagmail
 from apscheduler.schedulers.background import BackgroundScheduler 
 from apscheduler.triggers.date import DateTrigger
 from PyQt5.QtCore import QThread,Qt
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from common.ui.Ui_mainWindow import Ui_mainWindow
-
+import time,datetime,sys,os,yagmail
 '''
 @主类
 @author: dujianxiao
 '''
-class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
+class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
     
     def resource_path(self,relative_path):
         base_path = getattr(sys,'_MEIPASS',os.path.dirname(os.path.abspath(__file__)))
         return os.path.join(base_path, relative_path)
-    
     
     def __init__(self):
         img=self.resource_path(os.path.join(".","source/1.ico"))
@@ -47,7 +38,6 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         now_time = datetime.datetime.now()
         ss=datetime.datetime.strptime(str(now_time)[:-7],'%Y-%m-%d %H:%M:%S') 
         self.taskTime.setMinimumDateTime(ss)
-        
         '''
         @设置窗口标题栏图标
         '''
@@ -55,7 +45,6 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(filename), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-        
         '''
         @计数
         '''
@@ -76,8 +65,10 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
     '''
     def getFile(self):
         ex.console.clear()
-        global sheetNames,data,sheet,book,sheet1,fileRes,path,file
+        global sheetNames,sheet,bookRes,sheetRes,fileRes,path,file
         try:
+            self.headerManager=''
+            self.userVar=[]
             reportDate=time.strftime("%Y%m%d", time.localtime())
             self.example.clear()
             '''
@@ -86,24 +77,23 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             fname , _ = QFileDialog.getOpenFileName(self, 'open file', '/',"files (*.xls *.xlsx)")
             self.fileName.setToolTip(fname)
             '''
-            @获取文件的路径和名称，供其他方法使用
+            @获取文件的路径和名称
             '''
             self.fileName.setText(fname)
             path,file=self.getPath(fname)
             '''
-            @初始化日志、配置文件
+            @初始化日志和配置文件
             '''
-            fileData,email,userParams,userParamsValue=self.initConfig(path)
-            initLog(path)
+            self.initConfig(path)
+            self.initLog(path)
             '''
-            @读取文件内容
+            @创建用例结果文件
             '''
-            data = readExcel(path+'/'+file)
-            sheetNames = getSheetNames(file,data)
-            book,sheet1,fileRes=self.createReport(reportDate,path, file, data, sheetNames)
+            sheetNames = self.getSheetNames(path+'/'+file)
+            bookRes,sheetRes,fileRes=self.createReport(reportDate,path,file,sheetNames)
             self.qSheetName.clear()
             self.example.clear()
-            fname=self.fileName.text()
+            fname=self.fileName.text()            
             '''
             @填充页签下拉列表
             '''
@@ -112,7 +102,6 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                     self.qSheetName.addItem('全部')
                 else:
                     self.qSheetName.addItem(str(sheetNames[i-1]))
-                 
             '''
             @如果未选择文件，页签下拉列表置空
             '''       
@@ -127,7 +116,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             self.qSheetName.clear()
     
     '''
-    @点击文件名，打开文件
+    @点击文件名打开文件
     '''
     def openExample(self):
         try:
@@ -149,11 +138,11 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         self.skipNum.setText('0')
         ex.console.clear()
         self.example.clear()
-        global sheetName,fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column,fname,path
+        global sheetName,sheet,nrows,fname,path
         try:
             reportDate=time.strftime("%Y%m%d", time.localtime())
             sheetName=self.qSheetName.currentText() 
-            book,sheet1,fileRes=self.createReport(reportDate,path, file, data, sheetNames)
+            bookRes,sheetRes,fileRes=self.createReport(reportDate,path,file,sheetNames)
             if (sheetName=='全部' and ex.qSheetName.currentIndex()==0) or sheetName=='':
                 self.example.setCurrentText('')
                 for i in range(len(sheetNames)):
@@ -161,21 +150,19 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                     self.example.items.clear()
                 self.example.loadItems([])
                 allRows=0
-                allRpt=''
-                
+                allRpt=''                
                 '''
                 @每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
-                '''
-                
+                '''                
                 for i in range(len(sheetNames)):
-                    fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetNames[i])
-                    rpt=ex.verTemp(file,sheetNames[i],sheet,ncols,book,sheet1[i],fileRes,column)
+                    sheet,nrows=self.initFile(reportDate,path,file,sheetNames[i])
+                    rpt=ex.verTemp(sheetNames[i],sheet,bookRes,sheetRes[i],fileRes)
                     allRpt=allRpt+str(rpt)
                     if rpt=='':
                         noRuns=0
-                        IterationCol=findStr(file,sheet,ncols,'Iteration')
+                        IterationCol=self.findStr(file,sheet,'Iteration')
                         for i in range(3,nrows+1):
-                            if str(getValue(file,sheet,i-1, IterationCol))=='0':
+                            if str(self.getValue(file,sheet,i-1, IterationCol))=='0':
                                 noRuns=noRuns+1
                         allRows=allRows+nrows-2-noRuns
                 if allRpt=='':
@@ -186,25 +173,25 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                 '''
                 @每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 '''
-                fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetName)
-                rpt=ex.verTemp(file,sheetName,sheet,ncols,book,sheet1[0],fileRes,column)
+                sheet,nrows=self.initFile(reportDate,path,file,sheetName)
+                rpt=ex.verTemp(sheetName,sheet,bookRes,sheetRes[0],fileRes)
                 noRuns = 0
                 if rpt=='':
                     for i in range(3,nrows+1):
-                        st.append(str(i)+' '+str(getValue(file,sheet,i-1,column[23])))
-                        st.append(str(getValue(file,sheet,i-1,column[24])))
+                        st.append(str(i)+' '+str(self.getValue(file,sheet,i-1,ex.nameCol)))
+                        st.append(str(self.getValue(file,sheet,i-1,ex.IterationCol)))
                         items.append(st)
                         st=[]
                     self.example.loadItems(items)
-                    IterationCol=findStr(file,sheet,ncols,'Iteration')
+                    IterationCol=self.findStr(file,sheet,'Iteration')
                     for i in range(3,nrows+1):
-                        if str(getValue(file,sheet,i-1, IterationCol)).upper()=='0':
+                        if str(self.getValue(file,sheet,i-1, IterationCol)).upper()=='0':
                             noRuns=noRuns+1
                     ex.result.setText('0/'+str(nrows-2-noRuns))
                 else:
                     ex.console.clear()
-                    ex.console.append("<font color=\"#FF0000\">"+str(rpt)+"</font> ")
-                    ex.console.append("<font color=\"#000000\"></font>")
+                    ex.consoleFunc('red',str(rpt))
+                    ex.consoleFunc('black')
         except Exception as e:
             print(e)
             
@@ -215,16 +202,14 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
     '''      
     def reloadSheet(self):
         try:
+            self.headerManager=''
+            self.userVar=[]
             fname=self.fileName.text()
             if fname=='请选择文件' or fname=='':
                 pass
             else:
                 self.qSheetName.clear()
-                '''
-                @读取文件内容
-                '''
-                data = readExcel(path+'/'+file)
-                sheetNames = getSheetNames(file,data)
+                sheetNames = self.getSheetNames(path+'/'+file)
                 '''
                 @填充页签下拉列表
                 '''
@@ -245,7 +230,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         self.failNum.setText('0')
         self.skipNum.setText('0')
         ex.console.clear()
-        global sheetName,fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column,fname,path
+        global sheetName,sheet,nrows,fname,path
         try:
             reportDate=time.strftime("%Y%m%d", time.localtime())
             sheetName=self.qSheetName.currentText() 
@@ -253,23 +238,21 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                 self.example.setCurrentText('')
                 for i in range(len(sheetNames)):
                     self.example.clear
-                    self.example.items.clear()
-                    
+                    self.example.items.clear()                    
                 allRows=0
-                allRpt=''
-                
+                allRpt=''                
                 '''
                 @每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 '''
                 for i in range(len(sheetNames)):
-                    fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetNames[i])
-                    rpt=ex.verTemp(file,sheetNames[i],sheet,ncols,book,sheet1[i],fileRes,column)
+                    sheet,nrows=self.initFile(reportDate,path,file,sheetNames[i])
+                    rpt=ex.verTemp(sheetNames[i],sheet,bookRes,sheetRes[i],fileRes)
                     allRpt=allRpt+str(rpt)
                     if rpt=='':
                         noRuns = 0
-                        IterationCol=findStr(file,sheet,ncols,'Iteration')
+                        IterationCol=self.findStr(file,sheet,'Iteration')
                         for i in range(3,nrows+1):
-                            if str(getValue(file,sheet,i-1, IterationCol)).upper()=='0':
+                            if str(self.getValue(file,sheet,i-1, IterationCol)).upper()=='0':
                                 noRuns=noRuns+1
                         allRows=allRows+nrows-2-noRuns
                 if allRpt=='':
@@ -280,8 +263,8 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                 '''
                 items=[]
                 st=[]
-                fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetName)
-                rpt=ex.verTemp(file,sheetName,sheet,ncols,book,sheet1,fileRes,column)
+                sheet,nrows=self.initFile(reportDate,path,file,sheetName)
+                rpt=ex.verTemp(sheetName,sheet,bookRes,sheetRes,fileRes)
                 '''
                 @模板校验通过
                 '''
@@ -295,17 +278,16 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                     self.example.clear()
                     self.example.items.clear()
                     noRuns = 0
-                    IterationCol=findStr(file,sheet,ncols,'Iteration')
+                    IterationCol=self.findStr(file,sheet,'Iteration')
                     for i in range(3,nrows+1):
-                        if str(getValue(file,sheet,i-1, IterationCol)).upper()=='0':
+                        if str(self.getValue(file,sheet,i-1, IterationCol)).upper()=='0':
                             noRuns=noRuns+1
                     for i in range(3,nrows+1):
-                        st.append(str(i)+' '+str(getValue(file,sheet,i-1,column[23])))
-                        st.append(str(getValue(file,sheet,i-1,column[24])))
+                        st.append(str(i)+' '+str(self.getValue(file,sheet,i-1,ex.nameCol)))
+                        st.append(str(self.getValue(file,sheet,i-1,ex.IterationCol)))
                         items.append(st)
                         st=[]
-                    self.example.loadItems(items)
-                    
+                    self.example.loadItems(items)                
                     '''
                     @保持上一次的选中状态
                     '''
@@ -313,13 +295,13 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
                         for i in range(len(exa)):
                             try:
                                 self.example.qCheckBox[exa[i]-2].setChecked(True)
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                print(e)
                     ex.result.setText('0/'+str(nrows-2-noRuns))
                 else:
                     ex.console.clear()
-                    ex.console.append("<font color=\"#FF0000\">"+str(rpt)+"</font> ")
-                    ex.console.append("<font color=\"#000000\"></font>")
+                    ex.consoleFunc('red',str(rpt))
+                    ex.consoleFunc('black')
         except Exception as e:
             print(e)
      
@@ -332,7 +314,6 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             ex.result.setText('0/'+str(len(exa)))
         except Exception as e:
             print(e)
-     
      
     '''
     @打开excel报告
@@ -352,8 +333,8 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         except Exception as e:
             print(e)
             ex.console.clear()
-            ex.console.append("<font color=\"#FF0000\">"+'打开报告失败'+"</font> ")
-            ex.console.append("<font color=\"#000000\"></font>")
+            ex.consoleFunc('red','打开报告失败')
+            ex.consoleFunc('black')
             
     '''
     @创建html测试报告
@@ -362,14 +343,14 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         try:
             html=self.resource_path("source/template")
             f1=open(html,"r",encoding="utf-8")
-            data = f1.read()
-            html=data.replace('${resultData}',str(js))
+            htmlData = f1.read()
+            html=htmlData.replace('${resultData}',str(js))
             f1.close()
             file=file[:file.index('.xls')]
             try:
                 os.remove(path+'/result/'+file+'-'+str(reportDate)+'-report.html')
             except Exception as e:
-                pass
+                print(e)
             htmlReportName=path+'/result/'+file+'-'+str(reportDate)+'-report.html'
             f2 = open(htmlReportName,'w',encoding='utf-8')
             f2.write(html)
@@ -394,10 +375,9 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         except Exception as e:
             print(e)
             ex.console.clear()
-            ex.console.append("<font color=\"#FF0000\">"+'打开报告失败'+"</font> ")
-            ex.console.append("<font color=\"#000000\"></font>")
-            
-            
+            ex.consoleFunc('red','打开报告失败')
+            ex.consoleFunc('black')
+                 
     '''
     @打开日志
     '''      
@@ -412,9 +392,8 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         except Exception as e:
             print(e)
             ex.console.clear()
-            ex.console.append("<font color=\"#FF0000\">"+'打开日志失败'+"</font> ")
-            ex.console.append("<font color=\"#000000\"></font>")
-            
+            ex.consoleFunc('red','打开日志失败')
+            ex.consoleFunc('black')
             
     '''
     @获取文件路径
@@ -437,21 +416,20 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
     def sendEmail(self,htmlReportName):
         isMail=ex.checkMail.checkState()
         if isMail==2:
-            ex.console.append("<font color=\"#000000\"></font>")
-            ex.console.append("<font color=\"#000000\">"+'邮件发送中...'+"</font>")
+            ex.consoleFunc('black')
+            ex.consoleFunc('black','邮件发送中...')
             try:
-                yag=yagmail.SMTP( user=email[0], password=email[2], host=email[1])
-                receList=email[3].split(',')
-                yag.send(receList,email[4],email[5],[htmlReportName])
-                ex.console.append("<font color=\"#000000\">"+'邮件发送成功'+"</font>")
+                yag=yagmail.SMTP( user=self.email[0], password=self.email[2], host=self.email[1])
+                receList=self.email[3].split(',')
+                yag.send(receList,self.email[4],self.email[5],[htmlReportName])
+                ex.consoleFunc('black','邮件发送成功')
                 yag.close()
             except Exception as e:
                 print(e)
                 yag.close()
-                ex.console.append("<font color=\"#FF0000\">"+str(e)+"</font> ")
-                ex.console.append("<font color=\"#FF0000\">"+'邮件发送失败'+"</font> ")
-                ex.console.append("<font color=\"#000000\"></font>")
-            
+                ex.consoleFunc('red',str(e))
+                ex.consoleFunc('red','邮件发送失败')
+                ex.consoleFunc('black')
     
     '''
     @重写窗口大小改变事件
@@ -462,9 +440,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         if ss==[]:
             ss=''
         elif '(' in str(ss):
-            ss=ss.replace('(', '')
-            ss=ss.replace(')', '')
-            ss=ss.replace("'", "")
+            ss=ss.replace('(', '').replace(')', '').replace("'", "")
         try: 
             '''
             @给用例框赋值(非下拉列表)
@@ -472,18 +448,17 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             items=[]
             st=[]
             reportDate=time.strftime("%Y%m%d", time.localtime())
-            fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetName)
+            sheet,nrows=self.initFile(reportDate,path,file,sheetName)
             for i in range(3,nrows+1):
-                st.append(str(i)+' '+str(getValue(file,sheet,i-1,column[23])))
-                st.append(str(getValue(file,sheet,i-1,column[24])))
+                st.append(str(i)+' '+str(self.getValue(file,sheet,i-1,ex.nameCol)))
+                st.append(str(self.getValue(file,sheet,i-1,ex.IterationCol)))
                 items.append(st)
                 st=[]
             [items.remove(str(item[0])) for item in items if str(item[0])=='全部']
         except Exception as e:
             print(e)
         self.example.loadItems(items)
-        self.example.setCurrentText(str(ss))
-        
+        self.example.setCurrentText(str(ss))        
         '''
         @给预览结果赋值
         '''
@@ -506,16 +481,8 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             elif ss=='停止':
                 ex.analyJSON.setText('解析JSON')
                 ex.analy_thread.terminate()
-                ex.task.setEnabled(True)
-                ex.abort.setEnabled(True)
-                ex.file.setEnabled(True)
-                ex.debug.setEnabled(True)
-                ex.dtailReport.setEnabled(True)
-                ex.html.setEnabled(True)
-                ex.dtailLog.setEnabled(True)
-                ex.qSheetName.setEnabled(True)
-                ex.refresh.setEnabled(True)
-    
+                self.buttonStatus(True)
+                
     '''
     @执行用例
     '''
@@ -533,15 +500,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
             elif ss=='停止':
                 ex.debug.setText('开始')
                 ex.debug_thread.terminate()
-                ex.task.setEnabled(True)
-                ex.abort.setEnabled(True)
-                ex.file.setEnabled(True)
-                ex.analyJSON.setEnabled(True)
-                ex.dtailReport.setEnabled(True)
-                ex.html.setEnabled(True)
-                ex.dtailLog.setEnabled(True)
-                ex.qSheetName.setEnabled(True)
-                ex.refresh.setEnabled(True)
+                self.buttonStatus(True)
 
     '''
     @开始任务
@@ -551,20 +510,31 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Template,Init):
         self.task_thread=taskClass()
         self.task_thread.start()
         
-        
     '''
     @取消任务
     '''
     def abortTask(self):
-        try:
-            scheduler.shutdown()
-            self.task.setEnabled(True)
-            self.checkMail.setCheckable(True)
-            self.taskTime.setEnabled(True)
-            ex.console.clear()
-            ex.console.append("<font color=\"#000000\">"+'定时任务已取消'+"</font>")
-        except Exception as e:
-            print(e)
+        scheduler.shutdown()
+        self.buttonStatus(True)
+        ex.console.clear()
+        ex.consoleFunc('black','定时任务已取消')
+
+    '''
+    @设置按钮状态
+    @param flag:True/False
+    '''
+    def buttonStatus(self,flag):
+        ex.task.setEnabled(flag)
+        ex.abort.setEnabled(flag)
+        ex.taskTime.setEnabled(flag)
+        ex.debug.setEnabled(flag)
+        ex.file.setEnabled(flag)
+        ex.analyJSON.setEnabled(flag)
+        ex.dtailReport.setEnabled(flag)
+        ex.html.setEnabled(flag)
+        ex.dtailLog.setEnabled(flag)
+        ex.qSheetName.setEnabled(flag)
+        ex.refresh.setEnabled(flag)
         
 '''
 @接口解析
@@ -576,43 +546,27 @@ class analyFunctionClass(QThread,DetailUI):
     
     def run(self):
         try:
-            ex.debug.setEnabled(False)
-            ex.task.setEnabled(False)
-            ex.abort.setEnabled(False)
-            ex.file.setEnabled(False)
-            ex.dtailReport.setEnabled(False)
-            ex.html.setEnabled(False)
-            ex.dtailLog.setEnabled(False)
-            ex.qSheetName.setEnabled(False)
-            ex.refresh.setEnabled(False)
+            ex.buttonStatus(False)
+            ex.analyJSON.setEnabled(True)
             ex.successNum.setText('0')
             ex.failNum.setText('0')
             ex.skipNum.setText('0')
             ex.result.setText('0/0')
             exa=ex.example.currentText()
             if exa==[]:
-                ex.console.append("<font color=\"#FF0000\">"+'请选择接口'+"</font> ")
-                ex.console.append("<font color=\"#000000\"></font>")
+                ex.consoleFunc('red', '请选择接口')
+                ex.consoleFunc('black')
             else:
                 exa=exa.replace("'", '').replace('(', '').replace(')','').split(',')
                 exa=[int(item) for item in exa]
-                fileData,email,userParams,userParamsValue=ex.initConfig(path)
+                ex.initConfig(path)
                 for i in range(len(exa)):
-                    ex.console.append("<font color=\"#000000\"></font>")
-                    ex.analyFunc(file,exa[i]-1, sheetName,userParams,userParamsValue,sheet,fileRes,column)
+                    ex.consoleFunc('black')
+                    ex.analyFunc(file,exa[i]-1, sheetName,sheet)
         except Exception as e:
             print(e)
-        ex.debug.setEnabled(True)
-        ex.task.setEnabled(True)
-        ex.abort.setEnabled(True)
-        ex.file.setEnabled(True)
-        ex.dtailReport.setEnabled(True)
-        ex.html.setEnabled(True)
-        ex.dtailLog.setEnabled(True)
-        ex.qSheetName.setEnabled(True)
-        ex.refresh.setEnabled(True)
-        ex.analyJSON.setText('解析JSON')
-    
+        self.buttonStatus(True)
+        ex.analyJSON.setText('解析JSON')    
             
 class debugClass(QThread,DetailUI):
         
@@ -639,21 +593,13 @@ class debugClass(QThread,DetailUI):
             ex.successNum.setText('0')
             ex.failNum.setText('0')
             ex.skipNum.setText('0')
-            ex.console.append("<font color=\"#000000\"></font>")
+            ex.consoleFunc('black')
             text=ex.result.text()
             ex.result.setText('0'+text[text.index('/'):])
-            ex.task.setEnabled(False)
-            ex.abort.setEnabled(False)
-            ex.file.setEnabled(False)
-            ex.analyJSON.setEnabled(False)
-            ex.dtailReport.setEnabled(False)
-            ex.html.setEnabled(False)
-            ex.dtailLog.setEnabled(False)
-            ex.qSheetName.setEnabled(False)
-            ex.refresh.setEnabled(False)
-            data = readExcel(path+'/'+file)
-            fileData,email,userParams,userParamsValue=ex.initConfig(path)
-            book,sheet1,fileRes=ex.createReport(reportDate,path, file, data, sheetNames)
+            ex.buttonStatus(False)
+            ex.debug.setEnabled(True)
+            ex.initConfig(path)
+            bookRes,sheetRes,fileRes=ex.createReport(reportDate,path,file,sheetNames)
             sheetValue=ex.qSheetName.currentText()
             allRpt=''
             testResult=[]
@@ -661,10 +607,10 @@ class debugClass(QThread,DetailUI):
             @全量
             '''
             if sheetValue=='全部' and ex.qSheetName.currentIndex()==0:
-                ex.console.append("<font color=\"#000000\"></font>")
+                ex.consoleFunc('black')
                 for i in range(len(sheetNames)):
-                    fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=ex.init(reportDate,path,file,sheetNames[i])   
-                    rpt=ex.verTemp(file,sheetNames[i],sheet,ncols,book,sheet1[i],fileRes,column)
+                    sheet,nrows=ex.initFile(reportDate,path,file,sheetNames[i])   
+                    rpt=ex.verTemp(sheetNames[i],sheet,bookRes,sheetRes[i],fileRes)
                     '''
                     @模板校验通过
                     '''
@@ -674,7 +620,7 @@ class debugClass(QThread,DetailUI):
                         @找出迭代次数为0（不执行）的用例
                         '''
                         for i in range(3,nrows+1):
-                            if str(getValue(file,sheet,i-1, column[24])).upper()=='0':
+                            if str(self.getValue(file,sheet,i-1, ex.IterationCol)).upper()=='0':
                                 noRuns=noRuns+1
                         '''
                         @全部用例数为各页签的用例数相加减去不执行的用例数
@@ -689,11 +635,11 @@ class debugClass(QThread,DetailUI):
                         '''
                         @初始化页签
                         '''
-                        fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=ex.init(reportDate,path,file,sheetNames[i])
+                        sheet,nrows=ex.initFile(reportDate,path,file,sheetNames[i])
                         '''
                         @执行该页签中的用例
                         '''
-                        dict,tr=ex.run(file,model,'',sheetNames[i],userParams,userParamsValue,sheet,nrows,book,sheet1[i],fileRes,column,ex.allRows)
+                        dict,tr=ex.run(model,'',sheetNames[i],sheet,nrows,bookRes,sheetRes[i],fileRes,ex.allRows)
                         '''
                         @拼接结果集
                         '''
@@ -701,10 +647,10 @@ class debugClass(QThread,DetailUI):
             else: #单个或多个
                 for i in range(len(sheetNames)):
                     if sheetValue==sheetNames[i]:
-                        sheet1=sheet1[i]
+                        sheetRes=sheetRes[i]
                         break
-                fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=ex.init(reportDate,path,file,sheetName)
-                rpt=ex.verTemp(file,sheetName,sheet,ncols,book,sheet1,fileRes,column)
+                sheet,nrows=ex.initFile(reportDate,path,file,sheetName)
+                rpt=ex.verTemp(sheetName,sheet,bookRes,sheetRes,fileRes)
                 '''
                 @模板校验通过才进行之后的操作
                 '''
@@ -719,7 +665,7 @@ class debugClass(QThread,DetailUI):
                             '''
                             @迭代次数为0表示此用例不执行
                             '''
-                            if str(getValue(file,sheet,i-1, column[24]))!='0':
+                            if str(self.getValue(file,sheet,i-1, ex.IterationCol))!='0':
                                 exa.append(i)
                     else:
                         '''
@@ -732,11 +678,11 @@ class debugClass(QThread,DetailUI):
                     @如果当前选中的用例(序列号大于nrows)已被删除,则提示
                     '''
                     if en != []:
-                        ex.console.append("<font color=\"#FF0000\">"+'用例'+str(en)+"不存在"+"</font>")
+                        ex.consoleFunc('red', '用例'+str(en)+"不存在")
                     else:
                         for item in exa:
-                            if str(getValue(file,sheet,item-1, column[24]))!='0':#不执行迭代次数为0的用例
-                                dict,tr=ex.run(file,model,item,sheetName,userParams,userParamsValue,sheet,nrows,book,sheet1,fileRes,column,len(exa))
+                            if str(self.getValue(file,sheet,item-1, ex.IterationCol))!='0':#不执行迭代次数为0的用例
+                                dict,tr=ex.run(model,item,sheetName,sheet,nrows,bookRes,sheetRes,fileRes,len(exa))
                                 testResult=testResult+tr
             '''
             @格式化html报告中的运行时间和时长
@@ -746,8 +692,7 @@ class debugClass(QThread,DetailUI):
             duration=second[:second.index('.')]
             dd=duration.split(':')
             duration=dd[0]+'小时 '+dd[1]+'分 '+dd[2]+'秒'
-            taskName=file[:-4] if file.endswith('xls') else file[:-5]
-                    
+            taskName=file[:-4] if file.endswith('xls') else file[:-5]           
             '''
             @测试结果存到字典中，用于html测试报告
             '''
@@ -764,18 +709,9 @@ class debugClass(QThread,DetailUI):
         ex.status2=0#fail
         ex.status3=0#skip
         ex.allRows=0
-        ex.task.setEnabled(True)
-        ex.abort.setEnabled(True)
-        ex.file.setEnabled(True)
-        ex.analyJSON.setEnabled(True)
-        ex.dtailReport.setEnabled(True)
-        ex.html.setEnabled(True)
-        ex.dtailLog.setEnabled(True)
-        ex.qSheetName.setEnabled(True) 
-        ex.refresh.setEnabled(True)
+        self.buttonStatus(True)
         ex.debug.setText('开始')  
             
-    
 '''
 @定时任务
 @全量执行－－除了迭代次数为0的
@@ -799,13 +735,13 @@ class taskClass(QThread,DetailUI):
                 '''
                 if inTime<now:
                     flag=False
-                    ex.console.append("<font color=\"#FF0000\">"+'时间不得小于当前时间,请重新输入'+"</font> ")
-                    ex.console.append("<font color=\"#000000\"></font>")
+                    ex.consoleFunc('red', '时间不得小于当前时间,请重新输入')
+                    ex.consoleFunc('black')
                 if flag==True:
                     trigger = DateTrigger(inTime)
                     scheduler = BackgroundScheduler ()
                     scheduler.add_job(self.taskJob, trigger)
-                    ex.console.append("<font color=\"#000000\">"+'定时任务将于'+str(inTime)+'执行:'+"</font>")
+                    ex.consoleFunc('black', '定时任务将于'+str(inTime)+'执行:')
                     ex.task.setEnabled(False)
                     ex.taskTime.setEnabled(False)
                     scheduler.start()
@@ -825,23 +761,14 @@ class taskClass(QThread,DetailUI):
             if fname=='请选择文件' or fname=='':
                 pass
             else:
-                ex.console.append("<font color=\"#000000\">"+'定时任务开始:'+"</font>")
+                ex.consoleFunc('black', '定时任务开始:')
                 startTime = datetime.datetime.now()
                 ex.successNum.setText('0')
                 ex.failNum.setText('0')
                 ex.skipNum.setText('0')
                 ex.result.setText('0/0')
-                ex.abort.setEnabled(False)
-                ex.debug.setEnabled(False)
-                ex.file.setEnabled(False)
-                ex.analyJSON.setEnabled(False)
-                ex.dtailReport.setEnabled(False)
-                ex.html.setEnabled(False)
-                ex.dtailLog.setEnabled(False)
-                ex.qSheetName.setEnabled(False)
-                ex.refresh.setEnabled(False)
-                data = readExcel(path+'/'+file)
-                book,sheet1,fileRes=ex.createReport(reportDate,path, file, data, sheetNames)
+                ex.buttonStatus(False)
+                bookRes,sheetRes,fileRes=ex.createReport(reportDate,path,file,sheetNames)
                 allRpt=''
                 try:
                     '''
@@ -849,13 +776,12 @@ class taskClass(QThread,DetailUI):
                     '''
                     model='普通' if ex.model1.isChecked() else '简洁'
                     for i in range(len(sheetNames)):
-                        fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=ex.init(reportDate,path,file,sheetNames[i])   
-                        rpt=ex.verTemp(file,sheetNames[i],sheet,ncols,book,sheet1[i],fileRes,column)
+                        sheet,nrows=ex.initFile(reportDate,path,file,sheetNames[i])
+                        rpt=ex.verTemp(sheetNames[i],sheet,bookRes,sheetRes[i],fileRes)
                         if rpt=='':
                             noRuns=0
-                            IterationCol=findStr(file,sheet,ncols,'Iteration')
                             for i in range(3,nrows+1):
-                                if str(getValue(file,sheet,i-1, IterationCol)).upper()=='0':
+                                if str(self.getValue(file,sheet,i-1,ex.IterationCol)).upper()=='0':
                                     noRuns=noRuns+1
                             ex.allRows=ex.allRows+nrows-2-noRuns
                         allRpt=allRpt+str(rpt)
@@ -865,21 +791,19 @@ class taskClass(QThread,DetailUI):
                     if allRpt=='':
                         testResult=[]
                         for i in range(len(sheetNames)):
-                            fileData,email,userParams,userParamsValue,data,sheet,nrows,ncols,column=self.init(reportDate,path,file,sheetNames[i])
-                            dict,tr=ex.run(file,model,'',sheetNames[i],userParams,userParamsValue,sheet,nrows,book,sheet1[i],fileRes,column,ex.allRows)
+                            sheet,nrows=ex.initFile(reportDate,path,file,sheetNames[i])
+                            dict,tr=ex.run(model,'',sheetNames[i],sheet,nrows,bookRes,sheetRes[i],fileRes,ex.allRows)
                             testResult=testResult+tr
                 except Exception as e:
                     print(e)
-                    ex.console.append("<font color=\"#FF0000\">"+'定时任务执行失败'+"</font> ")
-                    ex.console.append("<font color=\"#000000\"></font>")
-                    
+                    ex.consoleFunc('red','定时任务执行失败')
+                    ex.consoleFunc('black')                  
                 endTime = datetime.datetime.now()
                 second=str(endTime-startTime)
                 duration=second[:second.index('.')]
                 dd=duration.split(':')
                 duration=dd[0]+'小时 '+dd[1]+'分 '+dd[2]+'秒'
                 taskName=file[:-4] if file.endswith('xls') else file[:-5]
-                
                 '''
                 @测试结果存到字典中，用于html测试报告
                 '''
@@ -890,26 +814,16 @@ class taskClass(QThread,DetailUI):
                 dict['testResult']=testResult#结果集
                 htmlReportName=ex.createHTMLReport(reportDate,dict,file,path)
                 ex.sendEmail(htmlReportName)
-                ex.console.append("<font color=\"#000000\"></font>")
-                ex.console.append("<font color=\"#000000\">"+'定时任务执行成功'+"</font>")
+                ex.consoleFunc('black')
+                ex.consoleFunc('black', '定时任务执行成功')
                 scheduler.shutdown()
         except Exception as e:
             print(e)
+        ex.allRows=0
         ex.status1=0#success
         ex.status2=0#fail
         ex.status3=0#skip
-        ex.allRows=0
-        ex.task.setEnabled(True)
-        ex.abort.setEnabled(True)
-        ex.taskTime.setEnabled(True)
-        ex.debug.setEnabled(True)
-        ex.file.setEnabled(True)
-        ex.analyJSON.setEnabled(True)
-        ex.dtailReport.setEnabled(True)
-        ex.html.setEnabled(True)
-        ex.dtailLog.setEnabled(True)
-        ex.qSheetName.setEnabled(True)
-        ex.refresh.setEnabled(True)
+        self.buttonStatus(True)
             
 if __name__ == "__main__":
     app=0
