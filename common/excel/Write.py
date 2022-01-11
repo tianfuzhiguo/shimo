@@ -1,64 +1,51 @@
-from common.excel.Array import *
-from common.excel.Array import Array
-from common.excel.Report import Report
 from common.http.Format import Format
-from common.excel.Template import Template
-import json
-import re
-import demjson
-import time
-import os
-import xmltodict  
+from common.excel.Array import Array
 from openpyxl.styles import PatternFill
+from time import sleep
 from jsonschema import validate
+import re,chardet,os,json,datetime,time,demjson,xmltodict  
 '''
-@有些看起来没有用到的库是为了表达式准备的－－其他类也一样
-'''
-
-
-'''
+@有些看起来没有用到的库是为了表达式准备的,所以不要删，其他类也一样
 @author: dujianxiao
 '''
-class Write(Array,Format,Template,Report,Init):
-        
+class Write(Format,Array):    
     '''
-    @deprecated: 写入接口请求结果
-    @param file:用例文件
+    @写入接口请求结果
     @param model:模式(普通,简洁)
     @param row:行号
-    @param sheetName:页签名
-    @param userParams:用户变量数组
-    @param userParamsValue:用户变量值数组
-    @param sheet:
-    @param book:
-    @param sheet1:
+    @param sheet:用例文件
+    @param bookRes:用例结果文件
+    @param sheetRes:用例结果文件
     @param fileRes:用例结果文件
-    @param column:列号
-    @param itera:第itera次迭代，从0计数 
+    @param currentItera:第n次迭代，从0计数 
+    @param Iteration:迭代次数  
     '''
-    def write(self,file,model,row,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,currentItera,Iteration):
+    def write(self,model,row,sheet,bookRes,sheetRes,fileRes,currentItera,Iteration):
         resp=[]
         skipDict=[]
         resultDict=[]
         status='成功'
         dict={}
         DBExc=[]
-        iteraValue=getValue(fileRes,sheet,row,column[24])
-        url=str(getValue(file,sheet,row,column[0]))
-        url=repRel(row,self.userVar,self.userVarValue,url)
-        url=repVar(str(url),userParams,userParamsValue)
-        className=str(getValue(file,sheet,row,column[23]))
-        className=repRel(row,self.userVar,self.userVarValue,className)
-        className=repVar(str(className),userParams,userParamsValue)
+        iteraValue=self.getValue(fileRes,sheet,row,self.IterationCol)
+        url=str(self.getValue(fileRes,sheet,row,self.urlCol))
+        url=self.repRel(row,url)
+        url=self.repVar(str(url))
+        className=str(self.getValue(fileRes,sheet,row,self.nameCol))
+        className=self.repRel(row,className)
+        className=self.repVar(str(className))
         if isinstance(iteraValue, int) == False and iteraValue != '':
-            skipDict=self.setSkip(sheet,row,book,sheet1,fileRes,'迭代异常',column,currentItera,Iteration,userParams,userParamsValue,'')
+            skipDict=self.setSkip(sheet,row,bookRes,sheetRes,fileRes,'迭代异常',currentItera,Iteration,'')
             status='异常'
             duration='--'
             resultDict=[]
             DBExc=[]
         else:
-            conn=getConn(file,sheet,row,column,userParams,userParamsValue)
-            r,duration,msg=self.checkFormat(file,sheetName,userParams,userParamsValue,sheet,row,conn,column)
+            '''
+            @数据库的连接/关闭时机有严格的逻辑，勿动。
+            '''
+            conn=self.getConn(fileRes,sheet,row)
+            r,duration,msg=self.checkFormat(fileRes,sheet,row,conn)
             print(r,duration,msg)
             try:
                 resp.append(str(r.text))
@@ -72,11 +59,11 @@ class Write(Array,Format,Template,Report,Init):
                     num=len(ss)//1000+1
                     for i in range(num):
                         if form=='xml':
-                            self.console.append("<font color=\"#000000\"></font>")
+                            self.consoleFunc('')
                             self.console.insertPlainText(ss[i*1000:(i+1)*1000])
                         
                         elif form=='json' or form=='jsonp':
-                            self.console.append("<font color=\"#000000\">"+ss[i*1000:(i+1)*1000]+"</font>")
+                            self.consoleFunc('black', ss[i*1000:(i+1)*1000])
                         '''
                         @由于qt性能的原因，每1000个字符暂停100毫秒，100毫秒是一个经验值
                         '''
@@ -89,45 +76,46 @@ class Write(Array,Format,Template,Report,Init):
                 print(e)
             if '异常' in str(msg):
                 if '数据库异常' not in str(msg):
-                    url=rep(file,sheet,row,conn,url,column,userParams,userParamsValue,self.userVar,self.userVarValue)
-                    className=rep(file,sheet,row,conn,className,column,userParams,userParamsValue,self.userVar,self.userVarValue) 
-                skipDict=self.setSkip(sheet,row,book,sheet1,fileRes,msg,column,currentItera,Iteration,userParams,userParamsValue,conn)
+                    url=self.rep(fileRes,sheet,row,conn,url)
+                    className=self.rep(fileRes,sheet,row,conn,className) 
+                skipDict=self.setSkip(sheet,row,bookRes,sheetRes,fileRes,msg,currentItera,Iteration,conn)
                 status='异常'
             else:
-                url=rep(file,sheet,row,conn,url,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+                url=self.rep(fileRes,sheet,row,conn,url)
                 '''
                 @取校验数据、预期结果的原始值和结果值
                 '''
-                checkRes1=self.checkRes(r,file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
-                resInit=self.expResultInit(file,sheet,row,column,userParams,userParamsValue,conn,self.userVar,self.userVarValue)
-                check1=self.check(file,sheet,row,column,userParams,userParamsValue,conn,self.userVar,self.userVarValue)
-                result1=self.expResult(file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+                checkRes=self.checkRes(r,fileRes,sheet,row,conn)
+                initRes=self.expResultInit(fileRes,sheet,row,conn)
+                check=self.check(fileRes,sheet,row,conn)
+                result=self.expResult(fileRes,sheet,row,conn)
                 '''
                 @在数据恢复之前进行三者替换
                 '''
-                statusCode=getArray(file,sheet,row,column[13],column[25])
-                resHeader=getArray(file,sheet,row,column[12],column[13])
-                res=getArray(file,sheet,row,column[11],column[12])
-                expression = getArray(file,sheet,row,column[25],column[14])
-                [repAll(str(item),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue) for item in statusCode]
-                [repAll(str(item),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue) for item in resHeader]
-                [repAll(str(item),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue) for item in res]
-                [repAll(str(item),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue) for item in expression]
+                statusCode=self.getArray(fileRes,sheet,row,self.statusCodeCol,self.expressionCol)
+                resHeader=self.getArray(fileRes,sheet,row,self.resHeaderCol,self.statusCodeCol)
+                res=self.getArray(fileRes,sheet,row,self.resTextCol,self.resHeaderCol)
+                expression=self.getArray(fileRes,sheet,row,self.expressionCol,self.statusCol)
+                
+                statusCode=[self.repAll(str(item),fileRes,sheet,row,conn) for item in statusCode]
+                resHeader=[self.repAll(str(item),fileRes,sheet,row,conn) for item in resHeader]
+                res=[self.repAll(str(item),fileRes,sheet,row,conn) for item in res]
+                expression=[self.repAll(str(item),fileRes,sheet,row,conn) for item in expression]
                 '''
                 @数据恢复之前把所有数据库相关的操作处理完
                 '''    
-                resMsg=restore(file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+                resMsg=self.restore(fileRes,sheet,row,conn)
                 '''
                 @数据库恢复部分的SQL异常
                 '''
                 if resMsg != []:
-                    skipDict=self.setSkip(sheet,row,book,sheet1,fileRes,resMsg,column,currentItera,Iteration,userParams,userParamsValue,conn)
+                    skipDict=self.setSkip(sheet,row,bookRes,sheetRes,fileRes,resMsg,currentItera,Iteration,conn)
                     status='异常'
                 else:
                     '''
                     @完全没有异常了再执行setResult
                     '''
-                    resultDict=self.setResult(file,row,book,sheet,sheet1,fileRes,checkRes1,check1,result1,resInit,r,duration,column,userParams,userParamsValue,self.userVar,self.userVarValue,res,resHeader,statusCode,expression,currentItera,Iteration)
+                    resultDict=self.setResult(row,bookRes,sheet,sheetRes,fileRes,checkRes,check,result,initRes,r,duration,res,resHeader,statusCode,expression,currentItera,Iteration)
                     if len(resultDict)>0:
                         status='失败'
             try:
@@ -147,9 +135,9 @@ class Write(Array,Format,Template,Report,Init):
             '''
             dict['className']=className
             dict['url']=url
-            dict['method']=getValue(file,sheet,row,column[1])
-            dict['param']=getValue(file,sheet,row,column[2])
-            dict['header']=getValue(file,sheet,row,column[4])
+            dict['method']=self.getValue(fileRes,sheet,row,self.methodCol)
+            dict['param']=self.getValue(fileRes,sheet,row,self.paramCol)
+            dict['header']=self.getValue(fileRes,sheet,row,self.headerCol)
             dict['duration']=duration
             dict['resp']=resp
             dict['status']=status
@@ -160,6 +148,7 @@ class Write(Array,Format,Template,Report,Init):
 
     '''
     @获取接口响应类型：xml,json,jsonp
+    @param r:接口响应对象 
     '''
     def getType(self,r):
         form = ''
@@ -171,7 +160,8 @@ class Write(Array,Format,Template,Report,Init):
                 '''
                 ss=str(json.loads(r.text))
                 form='json'
-            except Exception:
+            except Exception as e:
+                print(e)
                 try:
                     '''
                     @又由于有些接口返回值不是json格式,不能loads,所以如果反序列化失败即不再进行反序列化
@@ -179,7 +169,8 @@ class Write(Array,Format,Template,Report,Init):
                     eval('json.dumps(xmltodict.parse(r.text))')
                     ss=str(r.text)
                     form='xml'
-                except Exception:
+                except Exception as e:
+                    print(e)
                     try:
                         '''
                         @格式为jsonp
@@ -188,98 +179,93 @@ class Write(Array,Format,Template,Report,Init):
 #                         ss=str(json.loads(re.match(".*?({.*}).*",r.text,re.S).group(1)))
                         ss=str(r.text)
                         form='jsonp'
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        print(e)
         except:
             if str(r)!='':
-                self.console.append("<font color=\"#000000\">"+str(r)+"</font>")
+                self.consoleFunc('red', str(r))
         return form,ss
         
     '''
-    @deprecated: 解析JSON
-    @param file:用例文件
+    @解析JSON
+    @param fileRes:用例结果文件 
     @param row:行号
     @param sheetName:页签名
-    @param userParams:用户变量数组
-    @param userParamsValue:用户变量值数组
-    @param sheet:
-    @param fileRes:用例结果文件
-    @param column:列号
+    @param sheet:用例文件
     '''
-    def analyFunc(self,file,row,sheetName,userParams,userParamsValue,sheet,fileRes,column):
+    def analyFunc(self,fileRes,row,sheetName,sheet):
         '''
         @JSON解析中不对异常情况进行处理，如有异常直接解析失败
         '''
-        className = str(getValue(file,sheet,row-1,column[23]))
-        getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【"+str(sheetName)+"】第"+str(row+1)+"个接口【"+className+"】解析开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
-        self.console.append("<font color=green>"+str(row+1)+' '+str(getValue(file,sheet,row,column[23]))+"</font>")
+        className = str(self.getValue(fileRes,sheet,row-1,self.nameCol))
+        self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【"+str(sheetName)+"】第"+str(row+1)+"个接口【"+className+"】解析开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+        self.consoleFunc('green', str(row+1)+' '+str(self.getValue(fileRes,sheet,row,self.nameCol)))
         try:
-            conn=getConn(file,sheet,row,column,userParams,userParamsValue)
-            s1,s2=self.jsonFormat(file,sheetName,userParams,userParamsValue,sheet,row,conn,column)
+            conn=self.getConn(fileRes,sheet,row)
+            s1,s2=self.jsonFormat(fileRes,sheet,row,conn)
             if s2=='解析失败':
-                self.console.append("<font color=\"#FF0000\">解析失败.</font>")
+                self.consoleFunc('red', '解析失败.')
             else:
                 for i in range(len(s1)):
-                    self.console.append("<font color=\"#000000\">"+str(s1[i])+':'+str(s2[i])+"</font>")
+                    self.consoleFunc('black', str(s1[i])+':'+str(s2[i]))
                     time.sleep(0.01)
         except Exception as e:
             print(e)  
-            self.console.append("<font color=\"#FF0000\">解析失败.</font>")
-        getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【"+str(sheetName)+"】第"+str(row+1)+"个接口【"+className+"】解析结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
-        
+            self.consoleFunc('red', '解析失败.')
+        self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【"+str(sheetName)+"】第"+str(row+1)+"个接口【"+className+"】解析结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
         
     '''
-    @deprecated: 如果数据合法性校验不通过则调用此方法
-    @param file:用例文件
-    @param sheet:
+    @如果数据合法性校验不通过则调用此方法
+    @param sheet:用例文件
     @param row:行号
-    @param book:
-    @param sheet1:
+    @param bookRes:用例结果文件
+    @param sheetRes:用例结果文件
     @param fileRes:用例结果文件
     @param msg: 接口返回的异常信息
-    @param column:列号
+    @param Iteration:迭代次数 
+    @param currentItera:第n次迭代，从0计数 
+    @param conn:数据库连接对象 
     '''
-    def setSkip(self,sheet,row,book,sheet1,fileRes,msg,column,currentItera,Iteration,userParams,userParamsValue,conn):
-        arr=[]
+    def setSkip(self,sheet,row,bookRes,sheetRes,fileRes,msg,currentItera,Iteration,conn):
         skipDict=[]
-        blue=setStyle(7)
+        blue=self.setCellStyle(7)
         if '迭代异常' in str(msg):
-            self.console.append("<font color=\"#FF0000\">迭代次数只能为空或非负整数</font>")
+            self.consoleFunc('red', '迭代次数只能为空或非负整数')
             self.status3=self.status3+1
-            iteraValue=getValue(fileRes,sheet,row,column[24])
+            iteraValue=self.getValue(fileRes,sheet,row,self.IterationCol)
             skipDict.append("迭代次数异常:"+str(iteraValue))
             '''
             @标识结果为：skip，并设背景为蓝色
             '''
             if fileRes.endswith('xls'):
-                sheet1.write(row,column[24],iteraValue,blue)
-                sheet1.write(row,column[14],'skip',blue)
+                sheetRes.write(row,self.IterationCol,iteraValue,blue)
+                sheetRes.write(row,self.statusCol,'skip',blue)
             elif fileRes.endswith('xlsx'):
-                self.setValueColor(sheet1,row+1,column[24],iteraValue,"blue")
-                self.setValueColor(sheet1,row+1,column[14],'skip',"blue") 
+                self.setValueColor(sheetRes,row+1,self.IterationCol,iteraValue,"blue")
+                self.setValueColor(sheetRes,row+1,self.statusCol,'skip',"blue") 
         else:
             if '数据库异常' in str(msg):
-                if msg[0][1]==column[22] and msg[1]==[]:
+                if msg[0][1]==self.DBCol and msg[1]==[]:
                     '''
                     @有sql未选择数据库
                     '''
-                    self.console.append("<font color=\"#FF0000\">"+str(msg[0])+"</font>")
-                    getError(str(msg[0]))
-                elif msg[0][1]==column[22] and msg[1]!=[]:
+                    self.consoleFunc('red', str(msg[0]))
+                    self.getError(str(msg[0]))
+                elif msg[0][1]==self.DBCol and msg[1]!=[]:
                     '''
                     @数据库连接类的异常
                     '''
                     err=msg[1][0]
-                    self.console.append("<font color=\"#FF0000\">"+err+"</font>")
-                    self.console.append("<font color=\"#FF0000\">"+str(msg[0])+"</font>")
+                    self.consoleFunc('red', err)
+                    self.consoleFunc('red', str(msg[0]))
                 else:
                     '''
                     @sql执行异常
                     '''
                     for i in range(1,len(msg[0])):
-                        exceValue=getValue(fileRes,sheet,row,int(msg[0][i]))
-                        self.console.append("<font color=\'#FF0000\'>"+str(msg[1][i-1])+"</font>")
-                    self.console.append("<font color=\"#FF0000\">"+str(msg[0])+"</font>")
+                        exceValue=self.getValue(fileRes,sheet,row,int(msg[0][i]))
+                        self.consoleFunc('red', str(msg[1][i-1]))
+                    self.consoleFunc('red', str(msg[0]))
                 '''
                 @异常信息存skipDict用于html测试报告
                 '''
@@ -287,95 +273,87 @@ class Write(Array,Format,Template,Report,Init):
                 if msg[1]!=[]:
                     skipDict.append(str(msg[1]))
             else:    
-                
                 skipDict.append(str(msg))
-                getToLog(str(msg))
+                self.getToLog(str(msg))
                 for i in range(1,len(msg)):
-                    exceValue=getValue(fileRes,sheet,row,int(msg[i]))
-                    exceValue=repAll(str(exceValue),fileRes,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
-                    self.console.append("<font color=\'#FF0000\'>"+exceValue+"</font>")
+                    exceValue=self.getValue(fileRes,sheet,row,int(msg[i]))
+                    exceValue=self.repAll(str(exceValue),fileRes,sheet,row,conn)
+                    self.consoleFunc('red', exceValue)
                     skipDict.append(exceValue)
-                    getToLog(exceValue)
-                self.console.append("<font color=\"#FF0000\">"+str(msg)+"</font>")
+                    self.getToLog(exceValue)
+                self.consoleFunc('red', str(msg))
             if currentItera==Iteration-1:
                 self.status3=self.status3+1
             '''
             @标识结果为：skip，并设背景为蓝色
             ''' 
             if fileRes.endswith('xls'):
-                sheet1.write(row,column[14],'skip',blue)
+                sheetRes.write(row,self.statusCol,'skip',blue)
             elif fileRes.endswith('xlsx'):
-                self.setValueColor(sheet1,row+1,column[14],'skip',"blue") 
-            
+                self.setValueColor(sheetRes,row+1,self.statusCol,'skip',"blue")            
             '''
             @去掉异常信息的数组
             ''' 
             if '数据库异常' in str(msg):
-                newArr=filterArr(msg[0],'异常')
+                newArr=self.filterArr(msg[0],'异常')
             else:
-                newArr=filterArr(msg,'异常')
+                newArr=self.filterArr(msg,'异常')
             '''
             @标识合法性校验不通过的单元格为蓝色
             '''
             for item in newArr:
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,int(item),getValue(fileRes,sheet,row,int(item)),blue)
+                    sheetRes.write(row,int(item),self.getValue(fileRes,sheet,row,int(item)),blue)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,int(item),getValue(fileRes,sheet,row,int(item)),"blue")
-        book.save(fileRes)
+                    self.setValueColor(sheetRes,row+1,int(item),self.getValue(fileRes,sheet,row,int(item)),"blue")
+        bookRes.save(fileRes)
         return skipDict
         
     '''
-    @deprecated: 数据合法性校验通过后调用此方法，校验各字段的值是否正确
-    @param file:用例文件
+    @数据合法性校验通过后调用此方法，校验各字段的值是否正确
     @param row:行号
-    @param book:
-    @param sheet:
-    @param sheet1:
+    @param bookRes:用例结果文件
+    @param sheet:用例文件
+    @param sheetRes:用例结果文件
     @param fileRes:用例结果文件    
-    @param checkRes1:校验字段结果数组+文件数组
-    @param check1: 校验字段数组－－原值
-    @param result1: 预期结果值数组
-    @param resInit: 预期结果数组－－原值
-    @param r:接口响应
+    @param checkRes:校验字段结果数组+文件数组
+    @param check: 校验字段数组－－原值
+    @param result: 预期结果值数组
+    @param initRes: 预期结果数组－－原值
+    @param r:接口响应对象
     @param duration:接口响应时间
-    @param column:列号    
     '''
-    def setResult(self,file,row,book,sheet,sheet1,fileRes,checkRes1,check1,result1,resInit,r,duration,column,userParams,userParamsValue,userVar,userVarValue,res,resHeader,statusCode,expression,currentItera,Iteration):
+    def setResult(self,row,bookRes,sheet,sheetRes,fileRes,checkRes,check,result,initRes,r,duration,res,resHeader,statusCode,expression,currentItera,Iteration):
         resultDict=[]
-        red=setStyle(2)
-        green=setStyle(3)
+        red=self.setCellStyle(2)
+        green=self.setCellStyle(3)
         status=0
         '''
         @写入接口响应时间
         @预置结果为 true
         '''
         if fileRes.endswith('xls'):
-            sheet1.write(row,column[15],duration)
-            sheet1.write(row,column[14],'true',green)
+            sheetRes.write(row,self.timeCol,duration)
+            sheetRes.write(row,self.statusCol,'true',green)
         elif fileRes.endswith('xlsx'):
-            self.setValueColor(sheet1,row+1,column[15],duration,"")
-            self.setValueColor(sheet1,row+1,column[14],'true',"green")
-            
+            self.setValueColor(sheetRes,row+1,self.timeCol,duration,"")
+            self.setValueColor(sheetRes,row+1,self.statusCol,'true',"green")            
         '''
         @校验预期结果，精确匹配
         '''
-        for j in range(len(check1)):
-            if str(checkRes1[j])!=str(result1[j]):#
+        for j in range(len(check)):
+            if str(checkRes[j])!=str(result[j]):#
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,column[5]+j,str(check1[j])+'-->'+str(checkRes1[j])+':'+str(result1[j]),red)
-                    sheet1.write(row,column[8]+j,str(resInit[j]),red)
-                    sheet1.write(row,column[14],'false',red)
+                    sheetRes.write(row,self.part101Col+j,str(check[j])+'-->'+str(checkRes[j])+':'+str(result[j]),red)
+                    sheetRes.write(row,self.section101Col+j,str(initRes[j]),red)
+                    sheetRes.write(row,self.statusCol,'false',red)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,column[5]+j,str(check1[j])+'-->'+str(checkRes1[j])+':'+str(result1[j]),"red")
-                    self.setValueColor(sheet1,row+1,column[8]+j,str(resInit[j]),"red")
-                    self.setValueColor(sheet1,row+1,column[14],'false',"red")
-                self.console.append("<font color=\"#FF0000\">"+str(check1[j])+\
-                                    ':实际结果:'+str(checkRes1[j])+\
-                                    '-->预期结果:'+str(result1[j])+"</font>")
-                resultDict.append(str(check1[j])+':实际结果:'+str(checkRes1[j])+'-->预期结果:'+str(result1[j]))
+                    self.setValueColor(sheetRes,row+1,self.part101Col+j,str(check[j])+'-->'+str(checkRes[j])+':'+str(result[j]),"red")
+                    self.setValueColor(sheetRes,row+1,self.section101Col+j,str(initRes[j]),"red")
+                    self.setValueColor(sheetRes,row+1,self.statusCol,'false',"red")
+                self.consoleFunc('red', str(check[j])+':实际结果:'+str(checkRes[j])+'-->预期结果:'+str(result[j]))
+                resultDict.append(str(check[j])+':实际结果:'+str(checkRes[j])+'-->预期结果:'+str(result[j]))
                 status=1
-
         '''
         @响应断言
         '''
@@ -384,15 +362,14 @@ class Write(Array,Format,Template,Report,Init):
                 pass
             else:
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,column[14],'false',red)
-                    sheet1.write(row,column[11]+i,res[i],red)
+                    sheetRes.write(row,self.statusCol,'false',red)
+                    sheetRes.write(row,self.resTextCol+i,res[i],red)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,column[14],'false',"red")
-                    self.setValueColor(sheet1,row+1,column[11]+i,res[i],"red")
-                self.console.append("<font color=\"#FF0000\">"+'响应断言失败:'+str(res[i])+"</font>")
+                    self.setValueColor(sheetRes,row+1,self.statusCol,'false',"red")
+                    self.setValueColor(sheetRes,row+1,self.resTextCol+i,res[i],"red")
+                self.consoleFunc('red', '响应断言失败:'+str(res[i]))
                 resultDict.append('响应断言失败:'+str(res[i]))
-                status=1
-                
+                status=1               
         '''
         @校验响应头，模糊匹配
         '''
@@ -401,16 +378,14 @@ class Write(Array,Format,Template,Report,Init):
                 pass
             elif str(resHeader[i]) not in str(r.headers):
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,column[12]+i,str(resHeader[i]),red)
-                    sheet1.write(row,column[14],'false',red)
+                    sheetRes.write(row,self.resHeaderCol+i,str(resHeader[i]),red)
+                    sheetRes.write(row,self.statusCol,'false',red)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,column[12]+i,str(resHeader[i]),"red")
-                    self.setValueColor(sheet1,row+1,column[14],'false',"red")
-                self.console.append("<font color=\"#FF0000\">"+'响应头断言失败:'+str(resHeader[i])+"</font>")
+                    self.setValueColor(sheetRes,row+1,self.resHeaderCol+i,str(resHeader[i]),"red")
+                    self.setValueColor(sheetRes,row+1,self.statusCol,'false',"red")
+                self.consoleFunc('red', '响应头断言失败:'+str(resHeader[i]))
                 resultDict.append('响应头断言失败:'+str(resHeader[i]))
-                status=1
-        
-            
+                status=1            
         '''
         @校验响应码，精确匹配
         '''
@@ -419,17 +394,14 @@ class Write(Array,Format,Template,Report,Init):
                 pass
             elif str(statusCode[i]) !=str(r.status_code):
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,column[13]+i,str(statusCode[i])+'-->'+str(r.status_code)+':'+str(statusCode[i]),red)
-                    sheet1.write(row,column[14],'false',red)
+                    sheetRes.write(row,self.statusCodeCol+i,str(statusCode[i])+'-->'+str(r.status_code)+':'+str(statusCode[i]),red)
+                    sheetRes.write(row,self.statusCol,'false',red)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,column[13]+i,str(statusCode[i])+'-->'+str(r.status_code)+':'+str(statusCode[i]),"red")
-                    self.setValueColor(sheet1,row+1,column[14],'false',"red")
-                self.console.append("<font color=\"#FF0000\">"+\
-                                    '响应码断言失败:'+'实际结果:'+str(r.status_code)+\
-                                    '-->预期结果:'+str(statusCode[i])+"</font>")
+                    self.setValueColor(sheetRes,row+1,self.statusCodeCol+i,str(statusCode[i])+'-->'+str(r.status_code)+':'+str(statusCode[i]),"red")
+                    self.setValueColor(sheetRes,row+1,self.statusCol,'false',"red")
+                self.consoleFunc('red', '响应码断言失败:'+'实际结果:'+str(r.status_code)+'-->预期结果:'+str(statusCode[i]))
                 resultDict.append('响应码断言失败:'+'实际结果:'+str(r.status_code)+'-->预期结果:'+str(statusCode[i]))
-                status=1
-            
+                status=1           
         '''
         @校验表达式
         '''
@@ -445,134 +417,117 @@ class Write(Array,Format,Template,Report,Init):
                 pass
             else:
                 if fileRes.endswith('xls'):
-                    sheet1.write(row,column[25]+i,str(expression[i]),red)
-                    sheet1.write(row,column[14],'false',red)
+                    sheetRes.write(row,self.expressionCol+i,str(expression[i]),red)
+                    sheetRes.write(row,self.statusCol,'false',red)
                 elif fileRes.endswith('xlsx'):
-                    self.setValueColor(sheet1,row+1,column[25]+i,str(expression[i]),"red")
-                    self.setValueColor(sheet1,row+1,column[14],'false',"red")
-                self.console.append("<font color=\"#FF0000\">"+'表达式断言失败:'+str(expression[i])+"</font>")
+                    self.setValueColor(sheetRes,row+1,self.expressionCol+i,str(expression[i]),"red")
+                    self.setValueColor(sheetRes,row+1,self.statusCol,'false',"red")
+                self.consoleFunc('red', '表达式断言失败:'+str(expression[i]))
                 resultDict.append('表达式断言失败:'+str(expression[i]))
                 status=1
         if currentItera==Iteration-1:
             if status==1:
                 self.status2=self.status2+1
             else:
-                self.status1=self.status1+1
-            
-        book.save(fileRes)  
-        return resultDict
-    
+                self.status1=self.status1+1 
+        bookRes.save(fileRes)  
+        return resultDict   
     
     '''
     @写入值并设置背景色
-    @param sheet1:
+    @param sheetRes:
     @param row:行号
     @param column:列号
     @param value:写入单元格的值
-    @param color:单元格背景色(red,blue,green)
+    @param color:单元格背景色
     '''
-    def setValueColor(self,sheet1,row,column,value,color):
-        sheet1.cell(row = row, column =column , value = value)
-        if color=='':
-            pass
-        else:
-            if color=='blue':
-                color='00FFFF'
-            elif color=='red':
-                color='FF0000'
-            elif color=='green':
-                color='00FF00'
-            color_fill = PatternFill("solid", fgColor=color)
-            sheet1.cell(row, column).fill = color_fill
+    def setValueColor(self,sheetRes,row,column,value,color):
+        sheetRes.cell(row = row, column =column , value = value)
+        color_fill = PatternFill("solid", fgColor=color)
+        sheetRes.cell(row, column).fill = color_fill
     
     ''' 
-    @deprecated: 执行－－单行执行或全量执行（无参数）
-    @param file:用例文件
+    @执行－－单行执行或全量执行（无参数）
     @param model:模式(普通,简洁)
     @param n:行号
     @param sheetName:页签名
-    @param userParams:用户变量数组
-    @param userParamsValue:用户变量值数组
-    @param sheet:
+    @param sheet:用例文件
     @param nrows:行数
-    @param ncols:列数
-    @param book:
-    @param sheet1:  
+    @param bookRes:用例结果文件
+    @param sheetRes: 用例结果文件 
     @param fileRes:用例结果文件    
-    @param column:列号 
     @param allRows:全部用例数
     '''   
-    def run(self,file,model,n,sheetName,userParams,userParamsValue,sheet,nrows,book,sheet1,fileRes,column,allRows): 
+    def run(self,model,n,sheetName,sheet,nrows,bookRes,sheetRes,fileRes,allRows): 
         testResult=[]
         dict={}
-        self.console.append("<font color=\"#000000\"></font>")
+        self.consoleFunc('black')
         if n=='':
             '''
             @全量执行
             '''
-            self.console.append("<font size=4 color=blue>"+"【"+sheetName+"】"+"</font>")
+            self.consoleFunc('blue', "【"+sheetName+"】", 'size=4')
             for row in range(3,nrows+1):
-                className = str(getValue(file,sheet,row-1,column[23]))
-                Iteration=getValue(file,sheet,int(row)-1, column[24])
+                className = str(self.getValue(fileRes,sheet,row-1,self.nameCol))
+                Iteration=self.getValue(fileRes,sheet,int(row)-1, self.IterationCol)
                 if isinstance(Iteration, int):
                     for i in range(Iteration):    
                         print(row)
-                        self.console.append("<font color=\"#000000\"></font>")
-                        self.console.append("<font color=green>"+str(row)+' '+className+"</font>")
-                        getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                        self.consoleFunc('black')
+                        self.consoleFunc('green', str(row)+' '+className)
+                        self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                         if i==Iteration-1:
-                            testResult.append(self.write(file,model,row-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,i,Iteration))
+                            testResult.append(self.write(model,row-1,sheet,bookRes,sheetRes,fileRes,i,Iteration))
                         else:
-                            self.write(file,model,row-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,i,Iteration)
+                            self.write(model,row-1,sheet,bookRes,sheetRes,fileRes,i,Iteration)
                         self.successNum.setText(str(self.status1))
                         self.failNum.setText(str(self.status2))
                         self.skipNum.setText(str(self.status3))
                         self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
-                        getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                        self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                 else:
                     print(row)
-                    self.console.append("<font color=\"#000000\"></font>")
-                    self.console.append("<font color=green>"+str(row)+' '+className+"</font>")
-                    getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
-                    testResult.append(self.write(file,model,row-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,0,1))
+                    self.consoleFunc('black')
+                    self.consoleFunc('green', str(row)+' '+className)
+                    self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    testResult.append(self.write(model,row-1,sheet,bookRes,sheetRes,fileRes,0,1))
                     self.successNum.setText(str(self.status1))
                     self.failNum.setText(str(self.status2))
                     self.skipNum.setText(str(self.status3))
                     self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
-                    getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
         else:
             '''
             @debug
             '''
-            className = str(getValue(file,sheet,n-1,column[23]))
-            Iteration=getValue(file,sheet,int(n)-1, column[24])
+            className = str(self.getValue(fileRes,sheet,n-1,self.nameCol))
+            Iteration=self.getValue(fileRes,sheet,int(n)-1, self.IterationCol)
             if isinstance(Iteration, int):
                 for i in range(Iteration):
                     print(n)
-                    self.console.append("<font color=\"#000000\"></font>")
-                    self.console.append("<font color=green>"+str(n)+' '+className+"</font>")
-                    getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.consoleFunc('black')
+                    self.consoleFunc('green', str(n)+' '+className)
+                    self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                     if i==Iteration-1:
-                        testResult.append(self.write(file,model,n-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,i,Iteration))
+                        testResult.append(self.write(model,n-1,sheet,bookRes,sheetRes,fileRes,i,Iteration))
                     else:
-                        self.write(file,model,n-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,i,Iteration)
+                        self.write(model,n-1,sheet,bookRes,sheetRes,fileRes,i,Iteration)
                     self.successNum.setText(str(self.status1))
                     self.failNum.setText(str(self.status2))
                     self.skipNum.setText(str(self.status3))
                     self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
-                    getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
             else:      
                 print(n)
-                self.console.append("<font color=\"#000000\"></font>")
-                self.console.append("<font color=green>"+str(n)+' '+className+"</font>")
-                getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
-                testResult.append(self.write(file,model,n-1,sheetName,userParams,userParamsValue,sheet,book,sheet1,fileRes,column,0,1))
+                self.consoleFunc('black')
+                self.consoleFunc('green', str(n)+' '+className)
+                self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                testResult.append(self.write(model,n-1,sheet,bookRes,sheetRes,fileRes,0,1))
                 self.successNum.setText(str(self.status1))
                 self.failNum.setText(str(self.status2))
                 self.skipNum.setText(str(self.status3))
                 self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
-                getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")                
-
+                self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")                
         '''
         @用于html测试报告
         '''
@@ -581,5 +536,4 @@ class Write(Array,Format,Template,Report,Init):
         dict['testFail']=self.status2
         dict['testSkip']=self.status3
         return dict,testResult
-        
-        
+    

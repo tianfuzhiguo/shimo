@@ -1,62 +1,41 @@
+from common.utils.Util import Util 
 from time import sleep
-from common.utils.Util import *
-import requests
-from requests.adapters import HTTPAdapter
-from common.init.Init import Init
-from common.excel.Array import *
-import re
-import chardet
-import os
-import json
-import datetime
-import time
-import demjson
-import xmltodict
-from common.utils.Log import *
-from common.utils.analy import analy
 from jsonschema import validate
+from requests.adapters import HTTPAdapter
+import requests,re,chardet,os,json,datetime,time,demjson,xmltodict
 
 '''
 @author: dujianxiao
 '''
-class Http(Init,analy):
+class Http(Util):
     res=requests.session()
-    '''
-    @接口请求超时时间目前配的是30S,是否还有必要失败重试？
-    '''
-#     res.mount('http://',HTTPAdapter(max_retries=3))#重试3次
-#     res.mount('https://',HTTPAdapter(max_retries=3))
     userVar=[]#接口变量数组
     userVarValue=[]#接口变量值数组
-    headerManager=''
+    headerManager=''#请求头
+    relate=''#接口关联
     
     '''
     @http请求
     @param file:用例文件
-    @param sheetName:页签名 
-    @param userParams:用户变量
-    @param userParamsValue:用户变量值
     @param sheet:页签
     @param row:行号
     @param conn:数据库连接对象
-    @param column:InitColumn--column
     '''
-    def httpRequest(self,file,sheetName,userParams,userParamsValue,sheet,row,conn,column):
+    def httpRequest(self,file,sheet,row,conn):
         body1=''
-        interface=getArray(file,sheet,row,column[19],column[20])#接口变量数组
-        url,method,pay,files,header=[repAll(str(getValue(file,sheet,row,column[i])),\
-                                            file,sheet,row,conn,column,userParams,userParamsValue,\
-                                            self.userVar,self.userVarValue) for i in range(5)]
+        interface=self.getArray(file,sheet,row,self.key001Col,self.value001Col)#接口变量数组
+        url,method,pay,files,header=[self.repAll(str(self.getValue(file,sheet,row,self.column[i+1])),\
+                                            file,sheet,row,conn) for i in range(5)]
         '''
         @如果请求头为空且信息头管理器不为空，则使用信息头管理器覆盖
         '''
         if header=='' and self.headerManager!='':
             header=self.headerManager
-        getToLog("url："+url)
-        getToLog("method："+method)
-        getToLog("params："+pay)
-        getToLog("files："+files)
-        getToLog("headers："+header)
+        self.getToLog("url："+url)
+        self.getToLog("method："+method)
+        self.getToLog("params："+pay)
+        self.getToLog("files："+files)
+        self.getToLog("headers："+header)
         
         '''
         @校验参数格式，需要是JSON格式
@@ -67,7 +46,7 @@ class Http(Init,analy):
             body1='' if body=='' else json.loads(body)
         except Exception as e:
             print(e)
-            msg=['参数异常',column[2]]
+            msg=['参数异常',self.paramCol]
             return '','---',msg
         '''
         @校验请求头格式，需要是JSON格式
@@ -78,15 +57,16 @@ class Http(Init,analy):
             else:
                 json.loads(header)
         except Exception as e:
-            msg=['请求头异常',column[4]]
+            print(e)
+            msg=['请求头异常',self.headerCol]
             return '','---',msg
         '''
         @暂时只支持四种请求方式
         '''
         if str(method).upper() not in ['GET','POST','PUT','DELETE']:
-            msg=['请求方式异常',column[1]]
+            msg=['请求方式异常',self.methodCol]
             return '','---',msg
-        r,duration,message=self.sendHttp(url,method,body,body1,header,files,column)
+        r,duration,message=self.sendHttp(url,method,body,body1,header,files)
         try:
             '''
             @字符集处理
@@ -103,23 +83,22 @@ class Http(Init,analy):
                 r.encoding='utf-8'
         except Exception as e:
             print(e)
-            
         if '异常' in str(message):
             return r,duration,message
         else:
-            getToLog(str(r))
+            self.getToLog(str(r))
             try:
                 '''
                 @某些接口返回值是html格式,会出现大量的转义字符,使用loads进行反序列化
                 '''
-                getToLog("接口响应:"+str(json.loads(r.text)))
+                self.getToLog("接口响应:"+str(json.loads(r.text)))
             except:
                 '''
                 @又由于有些接口返回值不是json格式,不能loads,所以如果反序列化失败即不再进行反序列化
                 '''
-                getToLog("接口响应:"+str(r.text))
-            getToLog("响应头："+str(r.headers))
-            msg3=Http.analyJSON(self,file,sheet,row,r,column,userParams,userParamsValue)
+                self.getToLog("接口响应:"+str(r.text))
+            self.getToLog("响应头："+str(r.headers))
+            msg3=Http.analyJSON(self,file,sheet,row,r)
             '''
             @校验字段或接口变量字段等JSON字段错误
             '''
@@ -127,60 +106,58 @@ class Http(Init,analy):
                 return r,duration,msg3
             else:
                 message=msg3
-                
-            self.setParams(r,interface,file,sheet,row,column)
-            message=self.setHeaderParams(file, sheet, row, column, conn, userParams, userParamsValue)
+            self.setParams(r,interface,file,sheet,row)
+            message=self.setHeaderParams(file, sheet, row, conn)
             if len(message)>1:
                 return r,duration,message
-        expressionMsg=self.validateExp(r,file,sheet,row,column,conn,userParams,userParamsValue)
+        expressionMsg=self.validateExp(r,file,sheet,row,conn)
         if len(expressionMsg)>1:
             return r,duration,expressionMsg
         return r,duration,''
     
     '''
-    @设置信息头管理器
-    @供后续接口隐式调用，如果接口设置了信息头，则信息头管理器在此接口中无效
+    @设置信息头管理器，供后续接口隐式调用，如果接口设置了信息头，则信息头管理器在此接口中无效
     '''
-    def setHeaderParams(self,file,sheet,row,column,conn,userParams,userParamsValue):
+    def setHeaderParams(self,file,sheet,row,conn):
         message=['信息头管理器异常']
-        headerM=getValue(file,sheet,row,column[21])
+        headerM=self.getValue(file,sheet,row,self.headerManagerCol)
         try:
             if headerM != '':
                 json.loads(headerM)
-                self.headerManager=repAll(str(headerM),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)  
+                self.headerManager=self.repAll(str(headerM),file,sheet,row,conn) 
         except Exception as e:
             print(e)
-            message.append(column[21])
+            message.append(self.headerManagerCol)
         return message
     
     '''
     @接口请求成功后存接口变量
     @如果已经存在同名的变量则覆盖，否则新建一个变量
     '''
-    def setParams(self,r,interface,file,sheet,row,column):  
+    def setParams(self,r,interface,file,sheet,row):  
         js=self.getResType(r)
         num=len(interface)
         for i in range(len(interface)):
-            vue=getValue(file,sheet,row,column[19]+i+num)
+            self.relate=self.getValue(file,sheet,row,self.key001Col+i+num)
             if interface[i]!='':
-                if vue not in self.userVar:
+                if self.relate not in self.userVar:
                     self.userVarValue.append(eval(js+interface[i]))
-                    self.userVar.append(vue)
+                    self.userVar.append(self.relate)
                 else:
                     for j in range(len(self.userVar)):
-                        if vue==self.userVar[j]:
+                        if self.relate==self.userVar[j]:
                             self.userVarValue[j]=eval(js+interface[i])
     
     '''
     @表达式异常校验
     '''
-    def validateExp(self,r,file,sheet,row,column,conn,userParams,userParamsValue):
+    def validateExp(self,r,file,sheet,row,conn):
         expressionMsg=['表达式异常']
-        column1 = column[25]
+        column1 = self.expressionCol
         js = self.getResType(r)
-        expression = getArray(file,sheet,row,column[25],column[14])
+        expression = self.getArray(file,sheet,row,self.expressionCol,self.statusCol)
         for i in range(len(expression)):
-            expression[i]=repAll(str(expression[i]),file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+            expression[i]=self.repAll(str(expression[i]),file,sheet,row,conn)
             '''
             @表达式可能涉及到接口响应
             '''
@@ -190,7 +167,7 @@ class Http(Init,analy):
                     eval(expression[i])
                 except Exception as e:
                     print(e)
-                    getError(str(expression[i])+":"+str(e))
+                    self.getError(str(expression[i])+":"+str(e))
                     expressionMsg.append(str(column1))
             column1 = column1+1
         return expressionMsg
@@ -201,33 +178,30 @@ class Http(Init,analy):
     @param sheet:  
     @param row:行号 
     @param r: 接口请求返回对象
-    @param column:列号 
-    @param userParams:用户变量
-    @param userParamsValue:用户变量值
     '''                      
-    def analyJSON(self,file,sheet,row,r,column,userParams,userParamsValue):
+    def analyJSON(self,file,sheet,row,r):
         '''
         @取出用例中所能的JSON字段
         '''
-        check=getArray(file,sheet,row,column[5],column[7])+getArray(file,sheet,row,column[19],column[20])
+        check=self.getArray(file,sheet,row,self.part101Col,self.part301Col)+self.getArray(file,sheet,row,self.key001Col,self.value001Col)
         msg = ['json异常']
         res = []
-        col=column[5]
+        col=self.part101Col
         js=self.getResType(r)
         for item in check:
             if(item == ''):
                 res.append('')
             else:
                 try:
-                    item = repVar(str(item),userParams,userParamsValue)
+                    item = self.repVar(str(item))
                     res.append(eval(js + item))#eval("r.json()item")
                 except Exception as e:
                     print(e)
                     msg.append(str(col))
-            if col<column[7]-1:
+            if col<self.part301Col-1:
                 col=col+1
-            elif col==column[7]-1:
-                col=col+(column[19]-column[7])+1
+            elif col==self.part301Col-1:
+                col=col+(self.key001Col-self.part301Col)+1
         '''
         @返回异常信息或JSON值数组
         '''
@@ -264,7 +238,7 @@ class Http(Init,analy):
                 try:
                     eval(js3)
                     js=js3
-                except:
+                except Exception:
                     js=str(r.text)
         return js
     
@@ -275,10 +249,9 @@ class Http(Init,analy):
     @param body1: 字典化参数
     @param header1: 请求头
     @param files:上传文件
-    @param column:列号  
     @return: r,响应时间,异常信息
     '''
-    def sendHttp(self,url,method1,body,body1,header1,files,column):   
+    def sendHttp(self,url,method1,body,body1,header1,files):   
         r=''
         body=body.replace('&', '%26').replace('=','%3D')#对&和=进行转义
         post=''
@@ -289,20 +262,21 @@ class Http(Init,analy):
         DELETE="self.delete(url,body,body1,header1)"
         PUT="self.put(url,body,body1,header1,files)"
         arrMethod=['GET','POST','PUT','DELETE']
-        arr=[str(method1).upper()]+filterArr(arrMethod,str(method1).upper())#把传入的method放到第一个，提高效率
-        msg = ['请求方式异常', column[1]]
+        arr=[str(method1).upper()]+self.filterArr(arrMethod,str(method1).upper())#把传入的method放到第一个，提高效率
+        msg = ['请求方式异常', self.methodCol]
         try:
             r1,duration=eval(eval(arr[0]))
         except Exception as e:
-            getError(str(e))
+            print(e)
+            self.getError(str(e))
             if 'Invalid URL' in str(e):
-                msg=['url异常',column[0]]
+                msg=['url异常',self.urlCol]
                 return str(e),'---',msg
             elif 'Failed to parse: '+str(url)==str(e):
-                msg=['url异常',column[0]]
+                msg=['url异常',self.urlCol]
                 return str(e),'---',msg
             else:
-                msg=['接口请求异常',column[0],column[1],column[2],column[3],column[4],]
+                msg=['接口请求异常',self.urlCol,self.methodCol,self.paramCol,self.fileCol,self.headerCol,]
                 return str(e),'---',msg
         '''
         @如果请求失败，则调用其他请求方式，其他方式有200说明请求方式写错了

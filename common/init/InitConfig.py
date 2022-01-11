@@ -1,11 +1,8 @@
-import time
 import configparser
-
 '''
 @author: dujianxiao
 '''
-class InitConfig():
-        
+class InitConfig():  
     '''
     @初始化config.ini
     @param path:配置文件路径 
@@ -64,9 +61,15 @@ class InitConfig():
                 print(e)
             return fileData,email,userParams,userParamsValue
         except Exception as e:
-            self.console.append("<font color=\"#000000\"></font> ")
-            self.console.append("<font color=\"#FF0000\">"+'初始化conf.ini失败:'+"</font> ")
-            self.console.append("<font color=\"#FF0000\">"+str(e)+"</font> ")
-            self.console.append("<font color=\"#000000\"></font> ")
+            self.consoleFunc('black')
+            self.consoleFunc('red', '初始化conf.ini失败:')
+            self.consoleFunc('black', str(e))
+            self.consoleFunc('black')
             print(e)
     
+    '''
+    @设置字体颜色和大小
+    @param color
+    '''
+    def consoleFunc(self,color,content='',size=''):
+        self.console.append("<font "+size+" color="+color+">"+content+"</font>")

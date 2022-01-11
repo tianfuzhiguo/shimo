@@ -1,75 +1,70 @@
 from common.init.Init import Init
-from common.utils.Util import setStyle,getValue,findStr
-
 '''
-@模板校验
+@模板校验:校验各关键字是否存在，顺序是否正确，是否有重复关键字;校验各部分数量是否一致
 @author: dujianxiao
 '''
 class Template(Init):
     '''
     @获取各标志位之间的数组个数
-    @param start:
-    @param end:  
+    @param start:开始列
+    @param end:  结束列
     '''
     def getArrLenth(self,start, end):
         return [column for column in range(start, end)]
     
     '''
     @模板校验
-    @param file:用例文件
     @param sheetName:页签名
-    @param sheet:
-    @param ncols:列数
-    @param book:
-    @param sheet1:
+    @param sheet:用例文件
+    @param book:用例结果文件
+    @param sheetRes:用例结果文件
     @param fileRes:用例结果文件
-    @param column:列号        
     '''
-    def verTemp(self,file,sheetName,sheet,ncols,book,sheet1,fileRes,column):
-        msg=self.verKeyWordExist(file,sheetName,sheet,ncols)
-        blue=setStyle(7)
+    def verTemp(self,sheetName,sheet,bookRes,sheetRes,fileRes):
+        msg=self.verKeyWordExist(fileRes,sheet)
+        blue=self.setCellStyle(7)
         if '未找到关键字' in str(msg):
-            self.console.append("<font size=4 color=green>"+sheetName+':'+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
-            self.console.append("<font color=\"#FF0000\">"+str(msg)+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
+            self.consoleFunc('green', sheetName+':', 'size=4')
+            self.consoleFunc('black')
+            self.consoleFunc('red', str(msg))
+            self.consoleFunc('black')
             return msg
         elif '存在重复的关键字' in str(msg):
-            self.console.append("<font size=4 color=green>"+sheetName+':'+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
-            self.console.append("<font color=\"#FF0000\">"+str(msg)+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
+            self.consoleFunc('green', sheetName+':', 'size=4')
+            self.consoleFunc('black')
+            self.consoleFunc('red', str(msg))
+            self.consoleFunc('black')
             return msg
         elif '关键字顺序不正确' in str(msg):
-            ss="['关键字顺序不正确',"+"'"+str(getValue(file,sheet,1,msg[1]))+"','"+str(getValue(file,sheet,1,msg[2]))+"']"
+            ss="['关键字顺序不正确',"+"'"+str(self.getValue(fileRes,sheet,1,msg[1]))+"','"+str(self.getValue(fileRes,sheet,1,msg[2]))+"']"
             print(ss)
             if fileRes.endswith('xls'):
-                sheet1.write(1,msg[1],getValue(file,sheet,1, msg[1]),blue)
-                sheet1.write(1,msg[2],getValue(file,sheet,1, msg[2]),blue)
+                sheetRes.write(1,msg[1],self.getValue(fileRes,sheet,1, msg[1]),blue)
+                sheetRes.write(1,msg[2],self.getValue(fileRes,sheet,1, msg[2]),blue)
             elif fileRes.endswith('xlsx'):
-                self.setValueColor(sheet1,2,msg[1],getValue(file,sheet,1,msg[1]),"blue")
-                self.setValueColor(sheet1,2,msg[2],getValue(file,sheet,1,msg[2]),"blue")
+                self.setValueColor(sheetRes,2,msg[1],self.getValue(fileRes,sheet,1,msg[1]),"blue")
+                self.setValueColor(sheetRes,2,msg[2],self.getValue(fileRes,sheet,1,msg[2]),"blue")
             
-            book.save(fileRes)
-            self.console.append("<font size=4 color=green>"+sheetName+':'+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
-            self.console.append("<font color=\"#FF0000\">"+str(ss)+"</font>")
-            self.console.append("<font color=\"#000000\"></font> ")
+            bookRes.save(fileRes)
+            self.consoleFunc('green', sheetName+':','size=4')
+            self.consoleFunc('black')
+            self.consoleFunc('red', str(ss))
+            self.consoleFunc('black')
             return msg
         else:
-            info=self.verLength(sheetName,column)
+            info=self.verLength()
             if '数量不一致' in str(info):
                 print('校验字段和预期结果数量不一致')
                 for i in range(1,len(info)):
                     if fileRes.endswith('.xls'):
-                        sheet1.write(1,int(info[i]),getValue(file,sheet,1,int(info[i])),blue)
+                        sheetRes.write(1,int(info[i]),self.getValue(fileRes,sheet,1,int(info[i])),blue)
                     elif fileRes.endswith('.xlsx'):
-                        self.setValueColor(sheet1,2,int(info[i]),getValue(file,sheet,1,int(info[i])),"blue")
-                book.save(fileRes)
-                self.console.append("<font size=4 color=green>"+sheetName+':'+"</font>")
-                self.console.append("<font color=\"#000000\"></font> ")
-                self.console.append("<font color=\"#FF0000\">"+str(info)+"</font>")
-                self.console.append("<font color=\"#000000\"></font> ")
+                        self.setValueColor(sheetRes,2,int(info[i]),self.getValue(fileRes,sheet,1,int(info[i])),"blue")
+                bookRes.save(fileRes)
+                self.consoleFunc('green', sheetName+':','size=4')
+                self.consoleFunc('black')
+                self.consoleFunc('red', str(info))
+                self.consoleFunc('black')
                 return info
             else:
                 return ''
@@ -77,11 +72,9 @@ class Template(Init):
     '''
     @校验各关键字是否存在，顺序是否正确，是否有重复关键字
     @param file:用例文件
-    @param sheetName:页签名
-    @param sheet:
-    @param ncols:列数
+    @param sheet:用例文件
     '''
-    def verKeyWordExist(self,file,sheetName,sheet,ncols):
+    def verKeyWordExist(self,file,sheet):
         '''
         @定义关键字数组
         '''
@@ -96,16 +89,16 @@ class Template(Init):
         keyWord=''
         repeat = ['存在重复的关键字']
         for item in arr:
-            for i in range(ncols):
+            for i in range(self.ncols):
                 try:
                     if file.endswith('xls'):
                         keyWord = sheet.cell(1, i).value
                     elif file.endswith('xlsx'):
                         keyWord = sheet.cell(row=2, column=i).value
-                except Exception:
-                    pass
+                except Exception as e:
+                    print(e)
                 if(item == keyWord):
-                    order.append(findStr(file,sheet,ncols,item))
+                    order.append(self.findStr(file,sheet,item))
                     if len(arrCopy)>0:
                         for k in range(len(arrCopy)):
                             if item == arrCopy[k]:
@@ -134,37 +127,34 @@ class Template(Init):
                 if order[i+1]<order[i]:
                     msg.append(order[i])
                     msg.append(order[i+1])
-            except Exception:
-                pass
-            
+            except Exception as e:
+                print(e)
         return msg if len(msg)>1 else ''
         
     '''
     @校验各部分数量是否一致
-    @param sheetName:页签名
-    @param column:列号
     '''
-    def verLength(self,sheetName,column): 
+    def verLength(self): 
         msg=[]
         st='数量不一致'
         msg.append(st)
         '''
         @校验字段
         '''
-        len1=self.getArrLenth(column[5], column[6])
-        len2=self.getArrLenth(column[6], column[7])
-        len3=self.getArrLenth(column[7], column[8])
+        len1=self.getArrLenth(self.part101Col, self.part201Col)
+        len2=self.getArrLenth(self.part201Col, self.part301Col)
+        len3=self.getArrLenth(self.part301Col, self.section101Col)
         '''
         @预期结果
         '''
-        len4=self.getArrLenth(column[8], column[9])
-        len5=self.getArrLenth(column[9], column[10])
-        len6=self.getArrLenth(column[10], column[11])
+        len4=self.getArrLenth(self.section101Col, self.section201Col)
+        len5=self.getArrLenth(self.section201Col, self.section301Col)
+        len6=self.getArrLenth(self.section301Col, self.resTextCol)
         '''
         @接口变量
         '''
-        len7=self.getArrLenth(column[19], column[20])
-        len8=self.getArrLenth(column[20], column[21])
+        len7=self.getArrLenth(self.key001Col, self.value001Col)
+        len8=self.getArrLenth(self.value001Col, self.headerManagerCol)
         if len(len1)!=len(len4):
             return msg+len1+len4
         elif len(len2)!=len(len5):

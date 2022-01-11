@@ -1,10 +1,8 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from common.ui.ComboCheckBox import ComboCheckBox
 from PyQt5.QtWidgets import QListView
-import sys
-import os
 from common.ui.TextEdit import TextEdit
-
+import sys,os
 '''
 @author: dujianxiao
 '''

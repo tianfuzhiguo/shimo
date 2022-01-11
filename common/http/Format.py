@@ -1,28 +1,21 @@
 from common.http.Http import Http
-from common.excel.Array import *
-from common.utils.Util import *
-from common.utils.analy import analy
-import os
-import chardet
-
+from common.utils.Analy import Analy
+from jsonschema import validate
+from time import sleep
+import re,chardet,os,json,datetime,time,demjson,xmltodict
 '''
 @author: dujianxiao
 '''
-
-class Format(Http,analy):
+class Format(Http,Analy):
     '''
     @合法性校验
     @param file: 用例文件
-    @param sheetName: 页签名
-    @param userParams: 用户变量
-    @param userParamsValue: 用户变量值
     @param sheet: 
     @param row:行号
     @param conn:数据库连接对象
-    @param column: 
     @return: 返回3个值，分别为：http响应、响应时间、异常信息
     '''
-    def checkFormat(self,file,sheetName,userParams,userParamsValue,sheet,row,conn,column):
+    def checkFormat(self,file,sheet,row,conn):
         '''
         @数据库Ip、用户名、密码错误等引起的异常
         '''
@@ -31,22 +24,22 @@ class Format(Http,analy):
         '''
         @有SQL无数据库连接引起的异常
         '''
-        DBMsg=DBExists(file,sheet,row,column,conn)
+        DBMsg=self.DBExists(file,sheet,row,conn)
         if DBMsg!=[]:
             return '','---',DBMsg
         '''
         @查询语句错误引起的异常
         '''
-        DBMsg=sqlExcept(file,sheet,row,column,userParams,userParamsValue,self.userVar,self.userVarValue,conn)
+        DBMsg=self.sqlExcept(file,sheet,row,conn)
         if '数据库异常' in str(DBMsg):
             return '','---',DBMsg
-        initMsg=init(file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+        initMsg=self.initData(file,sheet,row,conn)
         '''
         @数据库初始化语句异常
         '''
         if initMsg != []:
             return '','---',initMsg
-        r,duration,msg=self.httpRequest(file,sheetName,userParams,userParamsValue,sheet,row,conn,column)
+        r,duration,msg=self.httpRequest(file,sheet,row,conn)
         '''
         @不直接返回，列出所有可能的异常
         '''
@@ -70,22 +63,17 @@ class Format(Http,analy):
             return r,duration,msg
     
     '''
-    @解析JSON
+    @把接口返回对象解析成path+value的形式
     @param file: 用例文件
-    @param sheetName: 页签名
-    @param userParams: 用户变量
-    @param userParamsValue: 用户变量值
     @param sheet: 
     @param row:行号
     @param conn:数据库连接对象
-    @param column: 
-    @return: JSON对象中全部字段的路径和值
     '''    
-    def jsonFormat(self,file,sheetName,userParams,userParamsValue,sheet,row,conn,column):
+    def jsonFormat(self,file,sheet,row,conn):
         try:
-            init(file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
-            r,duration,msg=self.httpRequest(file,sheetName,userParams,userParamsValue,sheet,row,conn,column)
-            restore(file,sheet,row,conn,column,userParams,userParamsValue,self.userVar,self.userVarValue)
+            self.initData(file,sheet,row,conn)
+            r,duration,msg=self.httpRequest(file,sheet,row,conn)
+            self.restore(file,sheet,row,conn)
             '''
             @处理字符集
             '''
@@ -99,8 +87,7 @@ class Format(Http,analy):
             s1,s2 = self.analy(eval(self.getResType(r)))
             return s1,s2
         except Exception as e:
-            getError(msg)
+            print(e)
+            self.getError(msg)
             return e,'解析失败'
-        
-            
         
