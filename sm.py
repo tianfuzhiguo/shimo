@@ -270,7 +270,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
                 '''
                 if rpt=='':
                     #获取被选中的用例
-                    exa=str(ex.example.currentText()).replace('(', '').replace(')','').replace(',','').split("'")
+                    exa=str(ex.example.currentText()).replace('(', '').replace(')','').replace("'",'').split(",")
                     for value in exa:
                         if value=='':
                             exa.remove(value)
@@ -287,7 +287,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
                         st.append(str(self.getValue(file,sheet,i-1,ex.IterationCol)))
                         items.append(st)
                         st=[]
-                    self.example.loadItems(items)                
+                    self.example.loadItems(items)    
                     '''
                     @保持上一次的选中状态
                     '''
@@ -827,7 +827,7 @@ class taskClass(QThread,DetailUI):
             
 if __name__ == "__main__":
     app=0
-    app = QApplication(sys.argv)    
+    app = QApplication(sys.argv)   
     ex = DetailUI()
     ex.show()
     sys.exit(app.exec_())
