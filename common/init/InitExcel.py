@@ -45,14 +45,13 @@ class InitExcel(ExcelUtil):
                 fileList=os.listdir(path+'/result/')
                 for i in range(len(fileList)):
                     if str(reportDate) not in str(fileList[i]) and str('report') in str(fileList[i]):
-                        try:                    
+                        try:              
                             shutil.move(path+'/result/'+str(fileList[i]), path+'/result/history')
                         except Exception as e:
                             print(e)
                 return sheet,nrows,ncols
             except Exception as e:
-                print(e)
-                    
+                print(e)  
         except Exception as e:
             print(e)                   
         

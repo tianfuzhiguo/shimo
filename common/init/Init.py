@@ -21,10 +21,10 @@ class Init(InitConfig,InitExcel):
     @param file:
     @param sheetName:   
     '''
-    def initFile(self,reportDate,path,file,sheetName):                                                                                                                                                                                                                                                          
-        self.fileData,self.email,self.userParams,self.userParamsValue=self.initConfig(path)                                                                                                                                                                                                                                     
-        book=self.getBook(path,file)                                                                                                                                                                                                                                                                        
-        sheet,nrows,self.ncols=self.getSheet(reportDate,path,sheetName,file,book)                                                                                                                                                                                                                                
+    def initFile(self,reportDate,path,file,sheetName):      
+        self.fileData,self.email,self.userParams,self.userParamsValue=self.initConfig(path)
+        book=self.getBook(path,file)  
+        sheet,nrows,self.ncols=self.getSheet(reportDate,path,sheetName,file,book)     
         self.column=self.getColumn(file,sheet)    
         self.nameCol=self.column[0]
         self.urlCol=self.column[1]
