@@ -124,7 +124,7 @@ class Template(Init):
         msg.append(st)
         for i in range(len(order)):
             try:
-                if order[i+1]<order[i]:
+                if i+1<len(order) and order[i+1]<order[i]:
                     msg.append(order[i])
                     msg.append(order[i+1])
             except Exception as e:
