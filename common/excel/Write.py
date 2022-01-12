@@ -42,7 +42,7 @@ class Write(Format,Array):
             DBExc=[]
         else:
             '''
-            @数据库的连接/关闭时机有严格的逻辑，勿动。
+            @数据库的连接和关闭的时机有严格的逻辑，勿动。
             '''
             conn=self.getConn(fileRes,sheet,row)
             r,duration,msg=self.checkFormat(fileRes,sheet,row,conn)
@@ -52,7 +52,7 @@ class Write(Format,Array):
                 '''
                 @普通模式下打印接口响应
                 @如果接口返回中含有html元素,使用append方式显示的是渲染后的结果,使用insertPlainText显示的是html原文
-                @使用insertPlainText性能会很差,很容易导致页面卡死进而导致程序崩溃
+                @insertPlainText性能很差,很容易导致页面卡死进而导致程序崩溃
                 '''
                 if model=='普通':
                     form,ss = self.getType(r)
@@ -60,8 +60,7 @@ class Write(Format,Array):
                     for i in range(num):
                         if form=='xml':
                             self.consoleFunc('')
-                            self.console.insertPlainText(ss[i*1000:(i+1)*1000])
-                        
+                            self.console.insertPlainText(ss[i*1000:(i+1)*1000])                     
                         elif form=='json' or form=='jsonp':
                             self.consoleFunc('black', ss[i*1000:(i+1)*1000])
                         '''
@@ -209,6 +208,7 @@ class Write(Format,Array):
                 for i in range(len(s1)):
                     self.consoleFunc('black', str(s1[i])+':'+str(s2[i]))
                     time.sleep(0.01)
+            self.consoleFunc('black')
         except Exception as e:
             print(e)  
             self.consoleFunc('red', '解析失败.')
@@ -329,8 +329,7 @@ class Write(Format,Array):
         green=self.setCellStyle(3)
         status=0
         '''
-        @写入接口响应时间
-        @预置结果为 true
+        @预置结果为true，后面如果有错误再修改结果
         '''
         if fileRes.endswith('xls'):
             sheetRes.write(row,self.timeCol,duration)
@@ -460,20 +459,19 @@ class Write(Format,Array):
     '''   
     def run(self,model,n,sheetName,sheet,nrows,bookRes,sheetRes,fileRes,allRows): 
         testResult=[]
-        dict={}
-        self.consoleFunc('black')
+        dict={}       
         if n=='':
             '''
             @全量执行
             '''
             self.consoleFunc('blue', "【"+sheetName+"】", 'size=4')
+            self.consoleFunc('black')
             for row in range(3,nrows+1):
                 className = str(self.getValue(fileRes,sheet,row-1,self.nameCol))
                 Iteration=self.getValue(fileRes,sheet,int(row)-1, self.IterationCol)
                 if isinstance(Iteration, int):
                     for i in range(Iteration):    
-                        print(row)
-                        self.consoleFunc('black')
+                        print(row)                        
                         self.consoleFunc('green', str(row)+' '+className)
                         self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                         if i==Iteration-1:
@@ -486,8 +484,7 @@ class Write(Format,Array):
                         self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
                         self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                 else:
-                    print(row)
-                    self.consoleFunc('black')
+                    print(row)                    
                     self.consoleFunc('green', str(row)+' '+className)
                     self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                     testResult.append(self.write(model,row-1,sheet,bookRes,sheetRes,fileRes,0,1))
@@ -496,16 +493,16 @@ class Write(Format,Array):
                     self.skipNum.setText(str(self.status3))
                     self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
                     self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(row)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                self.consoleFunc('black')
         else:
             '''
-            @debug
+            @单个或多个
             '''
             className = str(self.getValue(fileRes,sheet,n-1,self.nameCol))
             Iteration=self.getValue(fileRes,sheet,int(n)-1, self.IterationCol)
             if isinstance(Iteration, int):
                 for i in range(Iteration):
-                    print(n)
-                    self.consoleFunc('black')
+                    print(n)                    
                     self.consoleFunc('green', str(n)+' '+className)
                     self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                     if i==Iteration-1:
@@ -518,8 +515,7 @@ class Write(Format,Array):
                     self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
                     self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
             else:      
-                print(n)
-                self.consoleFunc('black')
+                print(n)                
                 self.consoleFunc('green', str(n)+' '+className)
                 self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
                 testResult.append(self.write(model,n-1,sheet,bookRes,sheetRes,fileRes,0,1))
@@ -527,7 +523,8 @@ class Write(Format,Array):
                 self.failNum.setText(str(self.status2))
                 self.skipNum.setText(str(self.status3))
                 self.result.setText(str(self.status1+self.status2+self.status3)+'/'+str(allRows))
-                self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")                
+                self.getToLog("☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆"+"【"+str(sheetName)+"】"+"第"+str(n)+"个接口【"+className+"】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+            self.consoleFunc('black')                
         '''
         @用于html测试报告
         '''
