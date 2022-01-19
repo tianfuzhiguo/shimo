@@ -92,9 +92,8 @@ class Util(SmLog,Init):
         sqlArray = self.getArray(file,sheet,row,self.part301Col,self.section101Col) + \
                    self.getArray(file,sheet,row,self.section201Col,self.section301Col) + \
                    self.getArray(file,sheet,row,self.dyparam001Col,self.key001Col)
-        for item in sqlArray:
-            item=self.repVar(str(item))
-            item=self.repRel(row,str(item))
+        sqlArray=[self.repRel(str(item)) for item in sqlArray]
+        sqlArray=[self.repVar(str(item)) for item in sqlArray]
         if conn==[[]]:
             return []
         else:   
@@ -107,8 +106,9 @@ class Util(SmLog,Init):
                         #这三部分的SQL只能是查询语句
                         '''
                         if (str(item).lower()).replace(' ', '').startswith('select')!=True:
+                            self.getToLog('part301Col,section201Col,dyparam001Col这三部分只能是select语句:'+str(item))
                             msg.append(column1)
-                            SqlMsg.append(column1)
+                            SqlMsg.append(str(item))
                         else:
                             cursor.execute(item)   
                     except Exception as e:
@@ -138,9 +138,8 @@ class Util(SmLog,Init):
         SqlMsg = []
         column1=self.init001Col
         sqlArray = self.getArray(file,sheet,row,self.init001Col,self.restore001Col)
-        for item in sqlArray:
-            item=self.repVar(str(item))
-            item=self.repRel(row,str(item))
+        sqlArray=[self.repRel(str(item)) for item in sqlArray]
+        sqlArray=[self.repVar(str(item)) for item in sqlArray]
         if conn ==[[]]:
             return []
         else:
@@ -173,9 +172,8 @@ class Util(SmLog,Init):
         SqlMsg = []
         column1 = self.restore001Col
         sqlArray = self.getArray(file,sheet,row,self.restore001Col,self.dyparam001Col)
-        for item in sqlArray:
-            item=self.repVar(str(item))
-            item=self.repRel(row,str(item))
+        sqlArray=[self.repRel(str(item)) for item in sqlArray]
+        sqlArray=[self.repVar(str(item)) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -206,9 +204,8 @@ class Util(SmLog,Init):
     def dyparam(self,file,sheet,row,conn):
         data=[]
         sqlArray = self.getArray(file,sheet,row,self.dyparam001Col,self.key001Col)
-        for item in sqlArray:
-            item=self.repVar(str(item))
-            item=self.repRel(row,str(item))
+        sqlArray=[self.repRel(str(item)) for item in sqlArray]
+        sqlArray=[self.repVar(str(item)) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -226,21 +223,19 @@ class Util(SmLog,Init):
             
     '''
     @用户变量替换
-    @param param: 参数
+    @param param:需要替换的值
     '''
     def repVar(self,param):
         for i in range(len(self.userParams)):
             if '${'+self.userParams[i]+'}' in param:
                 param=param.replace('${'+str(self.userParams[i])+'}',str(self.userParamsValue[i]))
         return param    
-    
             
     '''
     @接口变量替换
-    @param row: 行号
-    @param param:参数
+    @param param:需要替换的值
     '''
-    def repRel(self,row,param):
+    def repRel(self,param):
         for i in range(len(self.userVar)):
             if '${'+str(self.userVar[i])+'}' in str(param):
                 param=param.replace('${'+str(self.userVar[i])+'}',str(self.userVarValue[i]))
@@ -252,7 +247,7 @@ class Util(SmLog,Init):
     @param sheet:  
     @param row: 行号
     @param conn: 数据库连接对象
-    @param param: 动态参数
+    @param param: 需要替换的值
     '''
     def rep(self,file,sheet,row,conn,param):
         dypArr=[]
@@ -274,9 +269,9 @@ class Util(SmLog,Init):
     @param row: 行号
     @param conn: 数据库连接对象
     '''
-    def repAll(self,strValue,file,sheet,row,conn):
-        strValue=self.repVar(str(strValue))
-        strValue=self.rep(file,sheet,row,conn,strValue)
-        strValue=self.repRel(row,strValue)
-        return strValue
+    def repAll(self,param,file,sheet,row,conn):
+        param=self.repVar(str(param))
+        param=self.rep(file,sheet,row,conn,param)
+        param=self.repRel(param)
+        return param
     
