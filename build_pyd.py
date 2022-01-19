@@ -7,7 +7,7 @@ setup(
                            "common/http/Format.py", "common/http/Http.py", 
                            "common/init/Init.py","common/init/InitConfig.py","common/init/InitExcel.py",
                            "common/ui/ComboCheckBox.py", "common/ui/TextEdit.py", "common/ui/Ui_mainWindow.py", 
-                           "common/utils/Analy.py","common/utils/SmLog.py","common/utils/Util.py","common/utils/ExcelUtil.py",
+                           "common/utils/Analy.py","common/utils/SmLog.py","common/utils/ExcelUtil.py","common/utils/Util.py"
                            ], language_level=3
         ),
 )

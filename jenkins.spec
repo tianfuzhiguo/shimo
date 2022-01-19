@@ -6,7 +6,7 @@ sys.setrecursionlimit(5000)
 block_cipher = None
 
 
-a = Analysis(['sm.py'],
+a = Analysis(['jenkins.py'],
              pathex=['C:\\Users\\sudi\\workspace\\20201106'],
              binaries=[],
              datas=[('source/template','source'),('source/2.png','source'),('source/1.ico','source')],
@@ -35,7 +35,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='sm',
+          name='jenkins',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
