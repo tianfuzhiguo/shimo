@@ -37,7 +37,5 @@ class Report(ExcelUtil):
             print(e)
             fileCheck='文件：'+fileRes+' 正在被其他程序使用'
             print(fileCheck)
-            self.consoleFunc('black')
             self.consoleFunc('red',str(fileCheck))
-            self.consoleFunc('black')
             

@@ -25,31 +25,23 @@ class Template(Init):
         blue=self.setCellStyle(7)
         if '未找到关键字' in str(msg):
             self.consoleFunc('green', sheetName+':', 'size=4')
-            self.consoleFunc('black')
             self.consoleFunc('red', str(msg))
-            self.consoleFunc('black')
             return msg
         elif '存在重复的关键字' in str(msg):
             self.consoleFunc('green', sheetName+':', 'size=4')
-            self.consoleFunc('black')
             self.consoleFunc('red', str(msg))
-            self.consoleFunc('black')
             return msg
         elif '关键字顺序不正确' in str(msg):
             ss="['关键字顺序不正确',"+"'"+str(self.getValue(fileRes,sheet,1,msg[1]))+"','"+str(self.getValue(fileRes,sheet,1,msg[2]))+"']"
-            print(ss)
             if fileRes.endswith('xls'):
                 sheetRes.write(1,msg[1],self.getValue(fileRes,sheet,1, msg[1]),blue)
                 sheetRes.write(1,msg[2],self.getValue(fileRes,sheet,1, msg[2]),blue)
             elif fileRes.endswith('xlsx'):
                 self.setValueColor(sheetRes,2,msg[1],self.getValue(fileRes,sheet,1,msg[1]),"blue")
                 self.setValueColor(sheetRes,2,msg[2],self.getValue(fileRes,sheet,1,msg[2]),"blue")
-            
             bookRes.save(fileRes)
             self.consoleFunc('green', sheetName+':','size=4')
-            self.consoleFunc('black')
             self.consoleFunc('red', str(ss))
-            self.consoleFunc('black')
             return msg
         else:
             info=self.verLength()
@@ -62,9 +54,7 @@ class Template(Init):
                         self.setValueColor(sheetRes,2,int(info[i]),self.getValue(fileRes,sheet,1,int(info[i])),"blue")
                 bookRes.save(fileRes)
                 self.consoleFunc('green', sheetName+':','size=4')
-                self.consoleFunc('black')
                 self.consoleFunc('red', str(info))
-                self.consoleFunc('black')
                 return info
             else:
                 return ''
@@ -104,9 +94,7 @@ class Template(Init):
                             if item == arrCopy[k]:
                                 repeat.append(item)
                                 break
-                    arrCopy.append(item)
-                    
-                    
+                    arrCopy.append(item)                  
             '''
             @如果没找到关键字，则返回未找到的关键字
             '''

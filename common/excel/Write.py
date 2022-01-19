@@ -29,10 +29,10 @@ class Write(Format,Array):
         DBExc=[]
         iteraValue=self.getValue(fileRes,sheet,row,self.IterationCol)
         url=str(self.getValue(fileRes,sheet,row,self.urlCol))
-        url=self.repRel(row,url)
+        url=self.repRel(url)
         url=self.repVar(str(url))
         className=str(self.getValue(fileRes,sheet,row,self.nameCol))
-        className=self.repRel(row,className)
+        className=self.repRel(className)
         className=self.repVar(str(className))
         if isinstance(iteraValue, int) == False and iteraValue != '':
             skipDict=self.setSkip(sheet,row,bookRes,sheetRes,fileRes,'迭代异常',currentItera,Iteration,'')
@@ -248,9 +248,10 @@ class Write(Format,Array):
                 if msg[0][1]==self.DBCol and msg[1]==[]:
                     '''
                     @有sql未选择数据库
-                    '''
+                    '''                   
+                    self.getError(str('有sql语句而没有连接数据库'))
+                    self.consoleFunc('red', '有sql语句而没有连接数据库')
                     self.consoleFunc('red', str(msg[0]))
-                    self.getError(str(msg[0]))
                 elif msg[0][1]==self.DBCol and msg[1]!=[]:
                     '''
                     @数据库连接类的异常
@@ -264,7 +265,7 @@ class Write(Format,Array):
                     '''
                     for i in range(1,len(msg[0])):
                         exceValue=self.getValue(fileRes,sheet,row,int(msg[0][i]))
-                        self.consoleFunc('red', str(msg[1][i-1]))
+                        self.consoleFunc('red', msg[1][i-1])
                     self.consoleFunc('red', str(msg[0]))
                 '''
                 @异常信息存skipDict用于html测试报告
