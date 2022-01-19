@@ -37,9 +37,6 @@ class InitConfig():
             email.append(receive)
             email.append(emailTitle)
             email.append(emailContent)
-            '''
-            @用户变量
-            '''
             try:
                 '''
                 @读取conf.ini中的用户自定义变量
@@ -61,10 +58,8 @@ class InitConfig():
                 print(e)
             return fileData,email,userParams,userParamsValue
         except Exception as e:
-            self.consoleFunc('black')
             self.consoleFunc('red', '初始化conf.ini失败:')
             self.consoleFunc('black', str(e))
-            self.consoleFunc('black')
             print(e)
     
     '''

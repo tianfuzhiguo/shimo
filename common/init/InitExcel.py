@@ -15,7 +15,6 @@ class InitExcel(ExcelUtil):
         except Exception as e:
             print(e)
             self.consoleFunc('red', str(e))
-            self.consoleFunc('black')
             return book                  
     '''
     @获取页签及其行数、列数
@@ -25,7 +24,6 @@ class InitExcel(ExcelUtil):
             book = self.readExcel(path+'/'+file)
         except Exception as e:
             self.consoleFunc('red', str(e))
-            self.consoleFunc('black')
         try:
             '''
             #生测试报告，历史报告移动到history中
