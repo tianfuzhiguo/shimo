@@ -4,10 +4,11 @@ from common.excel.Template import Template
 from apscheduler.schedulers.background import BackgroundScheduler 
 from apscheduler.triggers.date import DateTrigger
 from PyQt5.QtCore import QThread,Qt
-from PyQt5 import QtGui, QtWidgets
+from PyQt5 import QtCore,QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
 from common.ui.Ui_mainWindow import Ui_mainWindow
 import time,datetime,sys,os,yagmail
+
 '''
 @主类
 @author: dujianxiao
@@ -19,8 +20,8 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
         return os.path.join(base_path, relative_path)
     
     def __init__(self):
-        img=self.resource_path(os.path.join(".","source/1.ico"))
-        splash = QtWidgets.QSplashScreen(QtGui.QPixmap(img))
+        self.img=self.resource_path(os.path.join(".","source/1.ico"))
+        splash = QtWidgets.QSplashScreen(QtGui.QPixmap(self.img))
         splash.show()                           # 显示启动界面
         QtWidgets.qApp.processEvents()          # 处理主进程事件
         font = QtGui.QFont()
@@ -77,16 +78,23 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
             self.example.clear()
             self.result.setText('0/0')
             self.initTextNum()
+            
             '''
-            @支持两种格式的excel文件
+            @集成jenkins时，自动加载配置文件和用例文件，文件需与执行程序在同一目录下
             '''
-            fname , _ = QFileDialog.getOpenFileName(self, 'open file', '/',"files (*.xls *.xlsx)")
-            self.fileName.setToolTip(fname)
-            '''
-            @获取文件的路径和名称
-            '''
+            path= os.getcwd()
+            path=path.replace('\\','/')
+            a,b,c,userParamsValue=self.initConfig(path)
+            self.initLog(path)
+            file=str(userParamsValue[-1:])
+            file=file[2:-2]
+            fname=path+'/'+file
+            sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
-            path,file=self.getPath(fname)
+            '''
+            @以上
+            '''           
+            
             '''
             @如果未选择文件，页签下拉列表置空
             '''       
@@ -703,7 +711,7 @@ class debugClass(QThread,DetailUI):
         '''
         @此行代码用于集成jenkins时，当用例执行完毕后自动退出程序
         '''
-        #sys.exit()
+        sys.exit()
             
 '''
 @定时任务
@@ -815,7 +823,10 @@ class taskClass(QThread,DetailUI):
             
 if __name__ == "__main__":
     app=0
-    app = QApplication(sys.argv)   
+    app = QApplication(sys.argv) 
     ex = DetailUI()
     ex.show()
+    ex.getFile()
+    ex.start()
     sys.exit(app.exec_())
+    
