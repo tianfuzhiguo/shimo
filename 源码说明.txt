@@ -1,5 +1,0 @@
-1，python版本3.5.1
-2，sm.py是程序入口
-3，项目所需要的库包含在pip_sm.bat文件中，使用时需要修改文件中的路径，修改后即可一键安装
-4，使用“打包时默.bat”和“打包jenkins.bat”打包成客户端，打包时需要修改“打包sm.bat”、“打包jenkins.bat”、sm.spec和jenkins.spec文件中的路径
-5，使用jenkins时需要在conf.ini的最后添加一行：jenkins=用例文件名
