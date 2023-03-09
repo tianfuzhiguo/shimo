@@ -89,6 +89,11 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
 
+            #以下4行是sm.py的代码，以上9行是jenkins.py的代码
+            # fname, _ = QFileDialog.getOpenFileName(self, 'open file', '/', "files (*.xls *.xlsx)")
+            # self.fileName.setToolTip(fname)
+            # self.fileName.setText(fname)
+            # path, file = self.getPath(fname)
             # 如果未选择文件，页签下拉列表置空
             if fname in ['请选择文件', '']:
                 self.qSheetName.clear()

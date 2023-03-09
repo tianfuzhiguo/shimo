@@ -78,6 +78,19 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             self.example.clear()
             self.result.setText('0/0')
             self.initTextNum()
+
+            # 集成jenkins时，自动加载配置文件和用例文件，文件需与执行程序在同一目录下
+            # path = os.getcwd()
+            # path = path.replace('\\', '/')
+            # a, b, userParamsValue = self.initConfig(path)
+            # self.initLog(path)
+            # file = str(userParamsValue[-1:])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
+            # file = file[2:-2]
+            # fname = path + '/' + file
+            # sheetNames = self.getSheetNames(fname)
+            # self.fileName.setText(fname)
+
+            #以下4行是sm.py的代码，以上9行是jenkins.py的代码
             fname, _ = QFileDialog.getOpenFileName(self, 'open file', '/', "files (*.xls *.xlsx)")
             self.fileName.setToolTip(fname)
             self.fileName.setText(fname)
@@ -574,4 +587,9 @@ if __name__ == "__main__":
     app.setStyleSheet(QssStyle1)
     ex = DetailUI()
     ex.show()
+    # jenkins需要加以下3行
+    # ex.model2.click()
+    # ex.getFile()
+    # ex.start()
     sys.exit(app.exec_())
+
