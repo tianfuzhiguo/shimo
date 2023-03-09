@@ -33,12 +33,9 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         self.setupUi(self)
         self.example = ComboCheckBox()
         self.example.setMinimumSize(QtCore.QSize(0, 25))
-        self.gridLayout.addWidget(self.example, 1, 1, 1, 1)
+        self.gridLayout.addWidget(self.example, 2, 0, 1, 2)
         self.console = TextEdit()
         self.gridLayout_4.addWidget(self.console, 1, 0, 1, 1)
-        now_time = datetime.datetime.now()
-        current_time = datetime.datetime.strptime(str(now_time)[:-7], '%Y-%m-%d %H:%M:%S')
-        self.taskTime.setMinimumDateTime(current_time)
 
         self.file.clicked.connect(self.getFile)
         self.fileName.clicked.connect(self.openExample)
@@ -57,7 +54,6 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         icon = QtGui.QIcon()
         icon.addPixmap(QtGui.QPixmap(img), QtGui.QIcon.Normal, QtGui.QIcon.Off)
         self.setWindowIcon(icon)
-        self.label.setFocus()
 
         self.allRows = 0
         self.status1 = 0  # success
