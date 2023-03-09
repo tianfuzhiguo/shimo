@@ -28,25 +28,6 @@
      <layout class="QHBoxLayout" name="horizontalLayout" stretch="3,2,3">
       <item>
        <layout class="QGridLayout" name="gridLayout">
-        <item row="1" column="0">
-         <widget class="QComboBox" name="qSheetName">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid CornflowerBlue; border-radius: 3px;height:23px;background-color:#ffffff;</string>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="0" colspan="2">
          <widget class="QPushButton" name="fileName">
           <property name="minimumSize">
@@ -63,8 +44,8 @@
           </property>
          </widget>
         </item>
-        <item row="2" column="1">
-         <widget class="QCheckBox" name="checkBox">
+        <item row="3" column="1">
+         <widget class="QRadioButton" name="model2">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -75,7 +56,7 @@
            <string notr="true">background-color:#ffffff;</string>
           </property>
           <property name="text">
-           <string>发送邮件</string>
+           <string>简洁</string>
           </property>
          </widget>
         </item>
@@ -98,35 +79,32 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QRadioButton" name="model2">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
+        <item row="2" column="0" colspan="2">
+         <widget class="QLabel" name="label">
           <property name="styleSheet">
-           <string notr="true">background-color:#ffffff;</string>
+           <string notr="true">border: 1px solid CornflowerBlue; border-radius: 3px;height:23px;background-color:#ffffff;</string>
           </property>
           <property name="text">
-           <string>简洁</string>
+           <string/>
           </property>
          </widget>
         </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="label">
+        <item row="1" column="0" colspan="2">
+         <widget class="QComboBox" name="qSheetName">
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>25</height>
            </size>
           </property>
-          <property name="styleSheet">
-           <string notr="true">background-color:#ffffff;</string>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
           </property>
-          <property name="text">
-           <string>定时任务</string>
+          <property name="styleSheet">
+           <string notr="true">border: 1px solid CornflowerBlue; border-radius: 3px;height:23px;background-color:#ffffff;</string>
           </property>
          </widget>
         </item>
@@ -134,27 +112,8 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_2">
-        <item row="0" column="0">
-         <widget class="QPushButton" name="file">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: white;
-    background: #5d8aad;
-    border: 1px #3079ED solid;
-    box-shadow: inset 0 1px 0 #80B0FB;</string>
-          </property>
-          <property name="text">
-           <string>选择</string>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QPushButton" name="refresh">
+        <item row="3" column="0">
+         <widget class="QPushButton" name="dtailLog">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -174,7 +133,7 @@
     box-shadow: inset 0 1px 0 #80B0FB;</string>
           </property>
           <property name="text">
-           <string>刷新</string>
+           <string>查看日志</string>
           </property>
          </widget>
         </item>
@@ -203,6 +162,56 @@
           </property>
          </widget>
         </item>
+        <item row="2" column="1">
+         <widget class="QPushButton" name="html">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: white;
+    background: #5d8aad;
+    border: 1px #3079ED solid;
+    box-shadow: inset 0 1px 0 #80B0FB;</string>
+          </property>
+          <property name="text">
+           <string>html报告</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QPushButton" name="refresh">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: white;
+    background: #5d8aad;
+    border: 1px #3079ED solid;
+    box-shadow: inset 0 1px 0 #80B0FB;</string>
+          </property>
+          <property name="text">
+           <string>刷新</string>
+          </property>
+         </widget>
+        </item>
         <item row="1" column="1">
          <widget class="QPushButton" name="analyJSON">
           <property name="minimumSize">
@@ -223,7 +232,32 @@
          </widget>
         </item>
         <item row="2" column="0">
-         <widget class="QPushButton" name="task">
+         <widget class="QPushButton" name="dtailReport">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="maximumSize">
+           <size>
+            <width>16777215</width>
+            <height>16777215</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">color: white;
+    background: #5d8aad;
+    border: 1px #3079ED solid;
+ </string>
+          </property>
+          <property name="text">
+           <string>excel报告</string>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QPushButton" name="file">
           <property name="minimumSize">
            <size>
             <width>0</width>
@@ -237,45 +271,7 @@
     box-shadow: inset 0 1px 0 #80B0FB;</string>
           </property>
           <property name="text">
-           <string>执行</string>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QPushButton" name="abort">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">color: white;
-    background: #5d8aad;
-    border: 1px #3079ED solid;
-    box-shadow: inset 0 1px 0 #80B0FB;</string>
-          </property>
-          <property name="text">
-           <string>取消</string>
-          </property>
-         </widget>
-        </item>
-        <item row="3" column="0" colspan="2">
-         <widget class="QDateTimeEdit" name="taskTime">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">border: 1px solid CornflowerBlue; border-radius: 3px;height:23px;background-color:#ffffff;</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-          <property name="displayFormat">
-           <string>yyyy-MM-dd HH:mm:ss</string>
+           <string>选择</string>
           </property>
          </widget>
         </item>
@@ -283,143 +279,10 @@
       </item>
       <item>
        <layout class="QGridLayout" name="gridLayout_3">
-        <item row="0" column="0">
-         <widget class="QLabel" name="label_2">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;</string>
-          </property>
-          <property name="text">
-           <string>结果预览:</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="0" column="1">
-         <widget class="QLabel" name="result">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';</string>
-          </property>
-          <property name="text">
-           <string>0/0</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
         <item row="0" column="2">
          <widget class="QLabel" name="label_10">
           <property name="text">
            <string/>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="0">
-         <widget class="QLabel" name="label_9">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;</string>
-          </property>
-          <property name="text">
-           <string>成功</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="1">
-         <widget class="QLabel" name="label_7">
-          <property name="minimumSize">
-           <size>
-            <width>105</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;</string>
-          </property>
-          <property name="text">
-           <string>失败</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="1" column="2">
-         <widget class="QLabel" name="label_8">
-          <property name="minimumSize">
-           <size>
-            <width>105</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;</string>
-          </property>
-          <property name="text">
-           <string>异常</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="0">
-         <widget class="QLabel" name="successNum">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';color: green;</string>
-          </property>
-          <property name="text">
-           <string>0</string>
-          </property>
-          <property name="alignment">
-           <set>Qt::AlignCenter</set>
-          </property>
-         </widget>
-        </item>
-        <item row="2" column="1">
-         <widget class="QLabel" name="failNum">
-          <property name="minimumSize">
-           <size>
-            <width>0</width>
-            <height>25</height>
-           </size>
-          </property>
-          <property name="styleSheet">
-           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';color: rgb(255,0,0);</string>
-          </property>
-          <property name="text">
-           <string>0</string>
           </property>
           <property name="alignment">
            <set>Qt::AlignCenter</set>
@@ -445,78 +308,136 @@
           </property>
          </widget>
         </item>
-        <item row="3" column="0">
-         <widget class="QPushButton" name="dtailReport">
+        <item row="1" column="1">
+         <widget class="QLabel" name="label_7">
           <property name="minimumSize">
            <size>
-            <width>0</width>
+            <width>105</width>
             <height>25</height>
            </size>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
           <property name="styleSheet">
-           <string notr="true">color: white;
-    background: #5d8aad;
-    border: 1px #3079ED solid;
- </string>
+           <string notr="true">height:23px;background-color:#ffffff;</string>
           </property>
           <property name="text">
-           <string>excel报告</string>
+           <string>失败</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="1">
-         <widget class="QPushButton" name="html">
+        <item row="2" column="0">
+         <widget class="QLabel" name="successNum">
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>25</height>
            </size>
           </property>
-          <property name="maximumSize">
-           <size>
-            <width>16777215</width>
-            <height>16777215</height>
-           </size>
-          </property>
           <property name="styleSheet">
-           <string notr="true">color: white;
-    background: #5d8aad;
-    border: 1px #3079ED solid;
-    box-shadow: inset 0 1px 0 #80B0FB;</string>
+           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';color: green;</string>
           </property>
           <property name="text">
-           <string>html报告</string>
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
-        <item row="3" column="2">
-         <widget class="QPushButton" name="dtailLog">
+        <item row="1" column="0">
+         <widget class="QLabel" name="label_9">
           <property name="minimumSize">
            <size>
             <width>0</width>
             <height>25</height>
            </size>
           </property>
-          <property name="maximumSize">
+          <property name="styleSheet">
+           <string notr="true">height:23px;background-color:#ffffff;</string>
+          </property>
+          <property name="text">
+           <string>成功</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="1" column="2">
+         <widget class="QLabel" name="label_8">
+          <property name="minimumSize">
            <size>
-            <width>16777215</width>
-            <height>16777215</height>
+            <width>105</width>
+            <height>25</height>
            </size>
           </property>
           <property name="styleSheet">
-           <string notr="true">color: white;
-    background: #5d8aad;
-    border: 1px #3079ED solid;
-    box-shadow: inset 0 1px 0 #80B0FB;</string>
+           <string notr="true">height:23px;background-color:#ffffff;</string>
           </property>
           <property name="text">
-           <string>查看日志</string>
+           <string>异常</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="1">
+         <widget class="QLabel" name="result">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';</string>
+          </property>
+          <property name="text">
+           <string>0/0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="0" column="0">
+         <widget class="QLabel" name="label_2">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">height:23px;background-color:#ffffff;</string>
+          </property>
+          <property name="text">
+           <string>结果预览:</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
+          </property>
+         </widget>
+        </item>
+        <item row="2" column="1">
+         <widget class="QLabel" name="failNum">
+          <property name="minimumSize">
+           <size>
+            <width>0</width>
+            <height>25</height>
+           </size>
+          </property>
+          <property name="styleSheet">
+           <string notr="true">height:23px;background-color:#ffffff;font: 12pt 'Arial';color: rgb(255,0,0);</string>
+          </property>
+          <property name="text">
+           <string>0</string>
+          </property>
+          <property name="alignment">
+           <set>Qt::AlignCenter</set>
           </property>
          </widget>
         </item>
