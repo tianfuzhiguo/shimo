@@ -6,4 +6,5 @@
 图片显示不了，详细介绍请转至https://testerhome.com/topics/25078
 
 由于github不支持大文件上传，打包好的客户端放在百度网盘上，所需的配置文件和用例在demo文件夹中
-链接: https://pan.baidu.com/s/1iAcIexEl1HXwryPm9OMIfQ 提取码: npbe
+链接：https://pan.baidu.com/s/1CHqN4cnuPI8xdQ-mLd4h-g 
+提取码：orm5
