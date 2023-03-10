@@ -9,4 +9,5 @@
 图片显示不了，详细介绍请转至https://testerhome.com/topics/25078
 
 由于github不支持大文件上传，打包好的客户端放在百度网盘上，所需的配置文件和用例在demo文件夹中
-链接: https://pan.baidu.com/s/1iAcIexEl1HXwryPm9OMIfQ 提取码: npbe
+链接：https://pan.baidu.com/s/1xBew9jWRIZRG7YZIlfczPg
+提取码：7cxb
