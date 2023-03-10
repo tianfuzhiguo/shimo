@@ -6,12 +6,12 @@ import traceback
 
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread
-from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog
+from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QListView
 
 from common.excel.Report import Report
 from common.excel.Template import Template
 from common.excel.Write import Write
-from common.ui.ComboCheckBox import ComboCheckBox
+from common.ui.ExampleBox import ExampleBox
 from common.ui.MainWindow import Ui_MainWindow
 from common.ui.TextEdit import TextEdit
 
@@ -20,7 +20,6 @@ from common.ui.TextEdit import TextEdit
 #author: dujianxiao
 '''
 date = time.strftime("%Y%m%d")
-
 
 class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
 
@@ -31,11 +30,13 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
     def __init__(self):
         super().__init__()
         self.setupUi(self)
-        self.example = ComboCheckBox()
+        self.example = ExampleBox()
         self.example.setMinimumSize(QtCore.QSize(0, 25))
-        self.gridLayout.addWidget(self.example, 2, 0, 1, 2)
+        self.example.setObjectName("example")
+        self.gridLayout.addWidget(self.example, 1, 1, 1, 1)
         self.console = TextEdit()
         self.gridLayout_4.addWidget(self.console, 1, 0, 1, 1)
+        self.qSheetName.setView(QListView())
 
         self.file.clicked.connect(self.getFile)
         self.fileName.clicked.connect(self.openExample)
@@ -119,6 +120,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         点击文件名打开文件
         """
         try:
+            fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
@@ -196,6 +198,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             self.headerManager = ''
             self.userVar = []
             self.userParams = []
+            fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 pass
             else:
@@ -215,8 +218,6 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         点击用例下拉框时重新填充下拉列表
         """
-        self.initTextNum()
-        self.console.clear()
         try:
             sheetName = self.qSheetName.currentText()
             if (sheetName == '全部' and ex.qSheetName.currentIndex() == 0) or sheetName == '':
@@ -296,6 +297,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         打开excel报告
         """
         try:
+            fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
@@ -309,9 +311,12 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             ex.console.clear()
             ex.consoleFunc('red', '打开报告失败')
 
-    def createHTMLReport(self, date, js, file, path):
+    def createHTMLReport(self, js):
         """
         创建html测试报告
+        :param path:
+        :param file:
+        :param js: json格式的测试结果
         """
         try:
             try:
@@ -320,11 +325,11 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 htmlData = f1.read()
                 html = htmlData.replace('${resultData}', str(js))
                 f1.close()
-                file = file[:file.index('.xls')]
-                html_file = path + '/result/' + file + '-' + date + '-report.html'
+                file_name = file[:file.index('.xls')]
+                html_file = f"{path}/result/{file_name}-{date}-report.html"
                 if os.path.exists(html_file):
                     os.remove(html_file)
-                htmlReportName = path + '/result/' + file + '-' + date + '-report.html'
+                htmlReportName = f"{path}/result/{file_name}-{date}-report.html"
                 f2 = open(htmlReportName, 'w', encoding='utf-8')
                 f2.write(html)
                 f2.close()
@@ -339,12 +344,14 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         打开html报告
         """
         try:
+            fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                reportName = file[:file.index('.xls')] + '-' + date + '-report.html'
-                sss = 'r' + "'" + path + '/result/' + reportName + "'"
-                os.startfile(eval(sss))
+                file_name = file[:file.index('.xls')]
+                reportName = f"{file_name}-{date}-report.html"
+                html_path = f"r'{path}/result/{reportName}'"
+                os.startfile(eval(html_path))
         except Exception as e:
             print(e)
             ex.console.clear()
@@ -355,11 +362,12 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         打开日志
         """
         try:
+            fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                sss = 'r' + "'" + path + '/result/info.log' + "'"
-                os.startfile(eval(sss))
+                log_path = f"r'{path}/result/info.log'"
+                os.startfile(eval(log_path))
         except Exception as e:
             print(e)
             ex.console.clear()
@@ -378,17 +386,18 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         接口解析
         """
+        fname = ex.fileName.text()
         if fname in ['请选择文件', '']:
             pass
         else:
             ss = self.analyJSON.text()
-            if ss == '解析':
+            if ss == '解  析':
                 ex.console.clear()
                 ex.analy_thread = analyFunctionClass()
                 ex.analy_thread.start()
                 ex.analyJSON.setText('停止')
             elif ss == '停止':
-                ex.analyJSON.setText('解析')
+                ex.analyJSON.setText('解  析')
                 ex.analy_thread.terminate()
                 self.buttonStatus(True)
 
@@ -396,22 +405,22 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         执行用例
         """
+        fname = ex.fileName.text()
         if fname in ['请选择文件', '']:
             pass
         else:
             ss = self.debug.text()
-            if ss == '开始':
+            if ss == '开  始':
                 ex.console.clear()
                 ex.debug_thread = debugClass()
                 ex.debug_thread.start()
                 ex.debug.setText('停止')
             elif ss == '停止':
-                ex.debug.setText('开始')
+                ex.debug.setText('开  始')
                 ex.debug_thread.terminate()
                 self.buttonStatus(True)
 
     def buttonStatus(self, flag):
-        ex.taskTime.setEnabled(flag)
         ex.debug.setEnabled(flag)
         ex.file.setEnabled(flag)
         ex.analyJSON.setEnabled(flag)
@@ -420,8 +429,6 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         ex.dtailLog.setEnabled(flag)
         ex.qSheetName.setEnabled(flag)
         ex.refresh.setEnabled(flag)
-        ex.task.setEnabled(flag)
-        ex.abort.setEnabled(flag)
 
     def initTextNum(self):
         ex.successNum.setText('0')
@@ -457,7 +464,7 @@ class analyFunctionClass(QThread, DetailUI):
         except Exception as e:
             print(e)
         self.buttonStatus(True)
-        ex.analyJSON.setText('解析')
+        ex.analyJSON.setText('解  析')
 
 
 class debugClass(QThread, DetailUI):
@@ -476,7 +483,7 @@ class debugClass(QThread, DetailUI):
             ex.status3 = 0  # skip
             ex.allRows = 0
         try:
-            model = '普通' if ex.model1.isChecked() else '简洁'
+            model = '普  通' if ex.model1.isChecked() else '简  洁'
             startTime = datetime.datetime.now()
             self.initTextNum()
             text = ex.result.text()
@@ -524,7 +531,7 @@ class debugClass(QThread, DetailUI):
                     exa = ex.example.currentText()
                     en = []
                     # 未选中任何用例则执行该页签的全部用例
-                    if exa == []:
+                    if not exa:
                         for i in range(3, nrows + 1):
                             # 迭代次数为0表示此用例不执行
                             if str(self.getValue(file, sheet, i - 1, ex.IterationCol)) != '0':
@@ -556,7 +563,7 @@ class debugClass(QThread, DetailUI):
             dict['beginTime'] = startTime[:startTime.index('.')]  # 开始时间
             dict['totalTime'] = duration  # 运行时长
             dict['testResult'] = testResult  # 结果集
-            ex.createHTMLReport(date, dict, file, path)
+            ex.createHTMLReport(dict)
         except Exception as e:
             print(e)
         ex.status1 = 0  # success
@@ -564,14 +571,14 @@ class debugClass(QThread, DetailUI):
         ex.status3 = 0  # skip
         ex.allRows = 0
         self.buttonStatus(True)
-        ex.debug.setText('开始')
+        ex.debug.setText('开  始')
         # 此行代码用于集成jenkins时，当用例执行完毕后自动退出程序
         # sys.exit()
 
 
 if __name__ == "__main__":
     app = 0
-    app = QApplication(sys.argv)
+    app = QApplication(sys.argv)#
     QssStyle1 = '''
                     QPushButton:hover{
                     color: rgb(0,51,153);
@@ -580,6 +587,7 @@ if __name__ == "__main__":
                     -webkit-transition-duration: 0.3s;
                     }
                     '''
+
     app.setStyleSheet(QssStyle1)
     ex = DetailUI()
     ex.show()
