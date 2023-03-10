@@ -12,15 +12,15 @@ from common.utils.ExcelUtil import ExcelUtil
 
 
 class Report(ExcelUtil):
-    '''
-    @生成excel结果文件
-    @param reportDate: 
-    @param path:文件路径
-    @param file:用例文件
-    @param sheetNames:用例文件中的全部页签名    
-    '''
 
     def createReport(self, reportDate, path, file, sheetNames):
+        """
+        生成excel结果文件
+        :param reportDate:
+        :param path:文件路径
+        :param file:用例文件
+        :param sheetNames:用例文件中的全部页签名
+        """
         try:
             sheetRes = []
             fileSrc = str(path).replace('/', '\\') + '\\'
