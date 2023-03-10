@@ -6,19 +6,17 @@ import configparser
 
 
 class InitConfig():
-    '''
-    @初始化config.ini
-    @param path:配置文件路径 
-    '''
 
     def initConfig(self, path):
+        """
+        初始化config.ini
+        :param path:配置文件路径
+        """
         try:
             fileData = []
             config = configparser.ConfigParser()
             config.read(path + '/conf.ini', encoding="utf-8-sig")
-            '''
-            @预置3个数据库
-            '''
+            #预置3个数据库
             DB1 = config.get("section", "DB1")
             DB2 = config.get("section", "DB2")
             DB3 = config.get("section", "DB3")
@@ -26,9 +24,7 @@ class InitConfig():
             fileData.append(DB2)
             fileData.append(DB3)
             try:
-                '''
-                @读取conf.ini中的用户自定义变量
-                '''
+                #读取conf.ini中的用户自定义变量
                 userParams = []
                 userParamsValue = []
                 with open(path + '/conf.ini', encoding='utf-8') as f:
@@ -50,10 +46,9 @@ class InitConfig():
             self.consoleFunc('black', str(e))
             print(e)
 
-    '''
-    @设置字体颜色和大小
-    @param color
-    '''
-
     def consoleFunc(self, color, content='', size=''):
+        """
+        设置字体颜色和大小
+        :param color
+        """
         self.console.append("<font " + size + " color=" + color + ">" + content + "</font>")

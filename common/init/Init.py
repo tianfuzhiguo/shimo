@@ -1,3 +1,5 @@
+import traceback
+
 from common.init.InitConfig import InitConfig
 from common.init.InitExcel import InitExcel
 
@@ -8,24 +10,22 @@ from common.init.InitExcel import InitExcel
 
 class Init(InitConfig, InitExcel):
     column = ''
-    '''
-    @各关键字的列号在很多地方会用到
-    '''
+    # 各关键字的列号在很多地方会用到
     nameCol, urlCol, methodCol, paramCol, fileCol, headerCol, part101Col, part201Col, part301Col, section101Col, \
     section201Col, section301Col, resTextCol, resHeaderCol, statusCodeCol, expressionCol, statusCol, timeCol, \
     init001Col, restore001Col, dyparam001Col, key001Col, value001Col, headerManagerCol, DBCol, IterationCol = \
         '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
     fileData, userParams, userParamsValue = '', '', ''
     ncols = ''
-    '''
-    @初始化用例文件和配置文件
-    @param reportDate: 
-    @param path:
-    @param file:
-    @param sheetName:   
-    '''
 
     def initFile(self, date, path, file, sheetName):
+        """
+        初始化用例文件和配置文件
+        :param date:
+        :param path:
+        :param file:
+        :param sheetName:
+        """
         self.fileData, self.userParams, self.userParamsValue = self.initConfig(path)
         book = self.getBook(path, file)
         sheet, nrows, self.ncols = self.getSheet(date, path, sheetName, file, book)

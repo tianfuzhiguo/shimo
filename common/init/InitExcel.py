@@ -61,8 +61,8 @@ class InitExcel(ExcelUtil):
     def getColumn(self, file, sheet):
         """
         获取sheet页各标志位的列号
-        param file:用例文件
-        param sheet:
+        :param file:用例文件
+        :param sheet:
         """
         column = [self.findStr(file, sheet, 'name'), self.findStr(file, sheet, 'url'),
                   self.findStr(file, sheet, 'method'), self.findStr(file, sheet, 'param'),
