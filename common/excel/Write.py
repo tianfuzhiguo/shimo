@@ -1,3 +1,4 @@
+import copy
 import traceback
 
 from common.http.Format import Format
@@ -376,9 +377,12 @@ class Write(Format, Array):
                 status = 1
         # 校验表达式
         js = self.getResType(r)
+        new_expression = copy.copy(expression)
         for i in range(len(expression)):
-            expreFlag = True
-            expression[i] = str(expression[i]).replace("r.json()", js)
+            try:
+                expression[i] = str(expression[i]).replace("r.json()", js)
+            except:
+                print(traceback.format_exc())
             if expression[i] == '':
                 expreFlag = True
             else:
@@ -392,8 +396,8 @@ class Write(Format, Array):
                 elif fileRes.endswith('xlsx'):
                     self.setValueColor(sheetRes, row + 1, self.expressionCol + i, str(expression[i]), "red")
                     self.setValueColor(sheetRes, row + 1, self.statusCol, 'false', "red")
-                self.consoleFunc('red', '表达式断言失败:' + str(expression[i]))
-                resultDict.append('表达式断言失败:' + str(expression[i]))
+                self.consoleFunc('red', '表达式断言失败:' + str(new_expression[i]))
+                resultDict.append('表达式断言失败:' + str(new_expression[i]))
                 status = 1
         if currentItera == Iteration - 1:
             if status == 1:
