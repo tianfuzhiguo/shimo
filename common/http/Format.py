@@ -14,10 +14,10 @@ class Format(Http, Analy):
     def checkFormat(self, file, sheet, row, conn):
         """
         合法性校验
-        param file: 用例文件
-        param sheet:
-        param row:行号
-        param conn:数据库连接对象
+        :param file: 用例文件
+        :param sheet:
+        :param row:行号
+        :param conn:数据库连接对象
         return: 返回3个值，分别为：http响应、响应时间、异常信息
         """
         # 数据库Ip、用户名、密码错误等引起的异常
@@ -59,10 +59,10 @@ class Format(Http, Analy):
     def jsonFormat(self, file, sheet, row, conn):
         """
         把接口返回对象解析成path+value的形式
-        param file: 用例文件
-        param sheet:
-        param row:行号
-        param conn:数据库连接对象
+        :param file: 用例文件
+        :param sheet:
+        :param row:行号
+        :param conn:数据库连接对象
         """
         try:
             self.initData(file, sheet, row, conn)

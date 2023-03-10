@@ -19,10 +19,10 @@ class Http(Util):
     def httpRequest(self, file, sheet, row, conn):
         """
         http请求
-        param file:用例文件
-        param sheet:页签
-        param row:行号
-        param conn:数据库连接对象
+        :param file:用例文件
+        :param sheet:页签
+        :param row:行号
+        :param conn:数据库连接对象
         """
         interface = self.getArray(file, sheet, row, self.key001Col, self.value001Col)  # 接口变量数组
         url, method, body, files, header = [self.repAll(str(self.getValue(file, sheet, row, self.column[i + 1])),
@@ -133,6 +133,11 @@ class Http(Util):
     def validateExp(self, r, file, sheet, row, conn):
         """
         表达式异常校验
+        :param conn: 数据库连接对象
+        :param row:
+        :param sheet:
+        :param r:
+        :param file
         """
         expressionMsg = ['表达式异常']
         column1 = self.expressionCol
@@ -155,10 +160,10 @@ class Http(Util):
     def analyJSON(self, file, sheet, row, r):
         """
         解析接口响应
-        param file:用例文件
-        param sheet:
-        param row:行号
-        param r: 接口请求返回对象
+        :param file:用例文件
+        :param sheet:
+        :param row:行号
+        :param r: 接口请求返回对象
         """
 
         # 取出用例中所有的JSON字段
@@ -214,11 +219,11 @@ class Http(Util):
 
     def sendHttp(self, url, method, body, header, files):
         """
-        param url:
-        param method:请求方式
-        param body: 参数
-        param header: 请求头
-        param files:上传文件
+        :param url:
+        :param method:请求方式
+        :param body: 参数
+        :param header: 请求头
+        :param files:上传文件
         return: r,响应时间,异常信息
         """
 
