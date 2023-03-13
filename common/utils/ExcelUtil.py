@@ -14,7 +14,7 @@ class ExcelUtil():
     def readExcel(self, file):
         """
         读取用例文件,支持.xls和.xlsx格式
-        param file:用例文件
+        :param file:用例文件
         """
         book = ''
         if file.endswith('xls'):
@@ -26,10 +26,10 @@ class ExcelUtil():
     def getValue(self, file, sheet, row, columnNum):
         """
         获取某行某列的值
-        param file:用例文件
-        param sheet:
-        param row:行号
-        param columnNum:列号
+        :param file:用例文件
+        :param sheet:
+        :param row:行号
+        :param columnNum:列号
         """
         if file.endswith('xls'):
             ctype = sheet.cell(row, columnNum).ctype  # 表格的数据类型
@@ -47,9 +47,9 @@ class ExcelUtil():
     def findStr(self, file, sheet, field):
         """
         用于查找特定字符串所在的列号
-        param file:用例文件
-        param sheet:
-        param field:关键字
+        :param file:用例文件
+        :param sheet:
+        :param field:关键字
         """
         try:
             if file.endswith('xls'):
@@ -69,7 +69,7 @@ class ExcelUtil():
     def getSheetNames(self, file):
         """
         获取用例文件中的全部页签名称
-        param file:用例文件
+        :param file:用例文件
         """
         sheetNames = ''
         book = self.readExcel(file)
@@ -82,19 +82,19 @@ class ExcelUtil():
     def filterArr(self, arr, word):
         """
         去除Arr中含有word的字符串
-        param arr:数组
-        param word:关键字
+        :param arr:数组
+        :param word:关键字
         """
         return [item for item in arr if str(word) not in str(item)]
 
     def getArray(self, file, sheet, row, start, end):
         """
         获取某行start到end之间的数组－－原值
-        param file:用例文件
-        param sheet:
-        param row:行号
-        param start:
-        param end:
+        :param file:用例文件
+        :param sheet:
+        :param row:行号
+        :param start:
+        :param end:
         """
         result = []
         if file.endswith('xls'):
@@ -115,11 +115,11 @@ class ExcelUtil():
     def getInitArray(self, file, sheet, row, field, msg):
         """
         取异常数据中的真实值
-        param file:用例文件
-        param sheet:
-        param row:行号
-        param field:关键字
-        param msg:异常数组
+        :param file:用例文件
+        :param sheet:
+        :param row:行号
+        :param field:关键字
+        :param msg:异常数组
         """
         return [self.getValue(file, sheet, row, int(item)) for item in msg[1:]] if field in str(msg) else ''
 
