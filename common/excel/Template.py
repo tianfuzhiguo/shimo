@@ -94,7 +94,7 @@ class Template(Init):
                         keyWord = sheet.cell(row=2, column=i).value
                 except Exception as e:
                     print(e)
-                if (item == keyWord):
+                if item == keyWord:
                     order.append(self.findStr(file, sheet, item))
                     if len(arrCopy) > 0:
                         for k in range(len(arrCopy)):
