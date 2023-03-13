@@ -13,7 +13,6 @@ from common.excel.Template import Template
 from common.excel.Write import Write
 from common.ui.ExampleBox import ExampleBox
 from common.ui.MainWindow import Ui_MainWindow
-from common.ui.TextEdit import TextEdit
 
 '''
 #主类
@@ -34,8 +33,6 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         self.example.setMinimumSize(QtCore.QSize(0, 25))
         self.example.setObjectName("example")
         self.gridLayout.addWidget(self.example, 1, 1, 1, 1)
-        self.console = TextEdit()
-        self.gridLayout_4.addWidget(self.console, 1, 0, 1, 1)
         self.qSheetName.setView(QListView())
 
         self.file.clicked.connect(self.getFile)
@@ -76,7 +73,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             self.result.setText('0/0')
             self.initTextNum()
 
-            # 集成jenkins时，自动加载配置文件和用例文件，文件需与执行程序在同一目录下
+            # 以下9行是jenkins.py的代码，再往下4行是sm.py的代码
             path = os.getcwd()
             path = path.replace('\\', '/')
             a, b, userParamsValue = self.initConfig(path)
@@ -87,7 +84,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
 
-            #以下4行是sm.py的代码，以上9行是jenkins.py的代码
+            # 以下4行是sm.py的代码，以上9行是jenkins.py的代码
             # fname, _ = QFileDialog.getOpenFileName(self, 'open file', '/', "files (*.xls *.xlsx)")
             # self.fileName.setToolTip(fname)
             # self.fileName.setText(fname)
@@ -303,7 +300,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             else:
                 reportName = file[:file.index('.xls')] + '-' + date + '-report.xls'
                 if file.endswith('xlsx'):
-                    reportName = reportName = +'x'
+                    reportName +='x'
                 excel = 'r' + "'" + path + '/result/' + reportName + "'"
                 os.startfile(eval(excel))
         except Exception as e:
@@ -395,8 +392,8 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 ex.console.clear()
                 ex.analy_thread = analyFunctionClass()
                 ex.analy_thread.start()
-                ex.analyJSON.setText('停止')
-            elif ss == '停止':
+                ex.analyJSON.setText('停  止')
+            elif ss == '停  止':
                 ex.analyJSON.setText('解  析')
                 ex.analy_thread.terminate()
                 self.buttonStatus(True)
@@ -414,8 +411,8 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 ex.console.clear()
                 ex.debug_thread = debugClass()
                 ex.debug_thread.start()
-                ex.debug.setText('停止')
-            elif ss == '停止':
+                ex.debug.setText('停  止')
+            elif ss == '停  止':
                 ex.debug.setText('开  始')
                 ex.debug_thread.terminate()
                 self.buttonStatus(True)
@@ -476,7 +473,7 @@ class debugClass(QThread, DetailUI):
         dict = {}
         ex.runFlag = True
         cText = ex.debug.text()
-        if cText == '停止':
+        if cText == '停  止':
             self.initTextNum()
             ex.status1 = 0  # success
             ex.status2 = 0  # fail
@@ -543,7 +540,7 @@ class debugClass(QThread, DetailUI):
                         en = [item for item in exa if item > nrows]
                     # 如果当前选中的用例(序列号大于nrows)已被删除,则提示
                     if en:
-                        ex.consoleFunc('red', '用例' + str(en) + "不存在")
+                        ex.consoleFunc('red', f"用例{en}不存在")
                     else:
                         for item in exa:
                             if str(self.getValue(file, sheet, item - 1, ex.IterationCol)) != '0':  # 不执行迭代次数为0的用例

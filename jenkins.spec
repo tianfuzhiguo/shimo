@@ -7,7 +7,7 @@ block_cipher = None
 
 
 a = Analysis(['jenkins.py'],
-             pathex=['D:\\20221130\\shimo-master'],
+             pathex=['D:\\20221130\\shimo'],
              binaries=[],
              datas=[('source/template','source'),('source/1.ico','source')],
              hiddenimports=['common.utils'],
