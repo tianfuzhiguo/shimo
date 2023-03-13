@@ -179,7 +179,7 @@ class Http(Util):
             else:
                 try:
                     item = self.repVar(str(item))
-                    res.append(eval(js + item))  # eval("r.json()item")
+                    res.append(eval(js + item))
                 except Exception as e:
                     print(e)
                     msg.append(str(col))
