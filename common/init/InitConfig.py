@@ -14,7 +14,7 @@ class InitConfig():
         """
         try:
             fileData = []
-            config = configparser.ConfigParser()
+            config = configparser.RawConfigParser()
             config.read(path + '/conf.ini', encoding="utf-8-sig")
             #预置3个数据库
             DB1 = config.get("section", "DB1")
@@ -49,6 +49,8 @@ class InitConfig():
     def consoleFunc(self, color, content='', size=''):
         """
         设置字体颜色和大小
-        :param color
+        :param size: 字号
+        :param content: 内容
+        :param color:字体颜色
         """
-        self.console.append("<font " + size + " color=" + color + ">" + content + "</font>")
+        self.console.append(f"<font {size} color={color}>{content}</font>")

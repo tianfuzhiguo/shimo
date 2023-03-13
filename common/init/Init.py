@@ -11,10 +11,7 @@ from common.init.InitExcel import InitExcel
 class Init(InitConfig, InitExcel):
     column = ''
     # 各关键字的列号在很多地方会用到
-    nameCol, urlCol, methodCol, paramCol, fileCol, headerCol, part101Col, part201Col, part301Col, section101Col, \
-    section201Col, section301Col, resTextCol, resHeaderCol, statusCodeCol, expressionCol, statusCol, timeCol, \
-    init001Col, restore001Col, dyparam001Col, key001Col, value001Col, headerManagerCol, DBCol, IterationCol = \
-        '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', '', ''
+    nameCol = urlCol = methodCol = paramCol = fileCol = headerCol = part101Col = part201Col = part301Col = section101Col = section201Col = section301Col = resTextCol = resHeaderCol = statusCodeCol = expressionCol = statusCol = timeCol = init001Col = restore001Col = dyparam001Col = key001Col = value001Col = headerManagerCol = DBCol = IterationCol = ''
     fileData, userParams, userParamsValue = '', '', ''
     ncols = ''
 
