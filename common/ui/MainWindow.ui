@@ -446,7 +446,7 @@
      </layout>
     </item>
     <item row="1" column="0">
-     <widget class="QTextEdit" name="textEdit">
+     <widget class="QTextEdit" name="console">
       <property name="styleSheet">
        <string notr="true">background:white</string>
       </property>
