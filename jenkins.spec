@@ -1,16 +1,13 @@
-# -*- mode: python ; coding: utf-8 -*-
-
 import sys
 sys.setrecursionlimit(5000)
 
 block_cipher = None
 
-
 a = Analysis(['jenkins.py'],
              pathex=['D:\\20221130\\shimo'],
              binaries=[],
              datas=[('source/template','source'),('source/1.ico','source')],
-             hiddenimports=['common.utils'],
+             hiddenimports=[],
              hookspath=[],
              runtime_hooks=[],
              excludes=[],
