@@ -103,7 +103,7 @@ class Write(Format, Array):
                     status = '异常'
                 else:
                     # 完全没有异常了再执行setResult
-                    resultDict = self.setResult(row, bookRes, sheet, sheetRes, fileRes, checkRes, check, result,
+                    resultDict = self.setResult(row, bookRes, sheetRes, fileRes, checkRes, check, result,
                                                 initRes, r, duration, res, resHeader, statusCode, expression,
                                                 currentItera, Iteration)
                     if len(resultDict) > 0:
@@ -177,7 +177,7 @@ class Write(Format, Array):
 
         # JSON解析中不对异常情况进行处理，如有异常直接解析失败
         className = str(self.getValue(fileRes, sheet, row - 1, self.nameCol))
-        self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row + 1}个接口【{className}】解析开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+        self.setFlag(sheetName, row + 1, className, '解析开始')
         self.consoleFunc('green', str(row + 1) + ' ' + str(self.getValue(fileRes, sheet, row, self.nameCol)))
         try:
             conn = self.getConn(fileRes, sheet, row)
@@ -186,13 +186,13 @@ class Write(Format, Array):
                 self.consoleFunc('red', '解析失败.')
             else:
                 for i in range(len(s1)):
-                    self.consoleFunc('black', str(s1[i]) + ':' + str(s2[i]))
-                    time.sleep(0.01)
+                    self.consoleFunc('black', f"{s1[i]}:{s2[i]}")
+                    time.sleep(0.001)
             self.consoleFunc('black')
         except Exception as e:
             print(e)
             self.consoleFunc('red', '解析失败.')
-        self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row + 1}个接口【{className}】解析结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+        self.setFlag(sheetName, row + 1, className, '解析结束')
 
     def setSkip(self, sheet, row, bookRes, sheetRes, fileRes, msg, currentItera, Iteration, conn):
         """
@@ -236,7 +236,7 @@ class Write(Format, Array):
                 else:
                     # sql执行异常
                     for i in range(1, len(msg[0])):
-                        exceValue = self.getValue(fileRes, sheet, row, int(msg[0][i]))
+                        # exceValue = self.getValue(fileRes, sheet, row, int(msg[0][i]))
                         self.consoleFunc('red', msg[1][i - 1])
                     self.consoleFunc('red', str(msg[0]))
                 # 异常信息存skipDict用于html测试报告
@@ -275,7 +275,7 @@ class Write(Format, Array):
         bookRes.save(fileRes)
         return skipDict
 
-    def setResult(self, row, bookRes, sheet, sheetRes, fileRes, checkRes, check, result, initRes, r, duration, res,
+    def setResult(self, row, bookRes, sheetRes, fileRes, checkRes, check, result, initRes, r, duration, res,
                   resHeader, statusCode, expression, currentItera, Iteration):
         """
         数据合法性校验通过后调用此方法，校验各字段的值是否正确
@@ -287,7 +287,6 @@ class Write(Format, Array):
         :param resHeader:
         :param row:行号
         :param bookRes:用例结果文件
-        :param sheet:用例文件
         :param sheetRes:用例结果文件
         :param fileRes:用例结果文件
         :param checkRes:校验字段结果数组+文件数组
@@ -313,12 +312,12 @@ class Write(Format, Array):
             if str(checkRes[j]) != str(result[j]):  #
                 if fileRes.endswith('xls'):
                     sheetRes.write(row, self.part101Col + j,
-                                   str(check[j]) + '-->' + str(checkRes[j]) + ':' + str(result[j]), red)
+                                   f"{check[j]}-->{checkRes[j]}:{result[j]}", red)
                     sheetRes.write(row, self.section101Col + j, str(initRes[j]), red)
                     sheetRes.write(row, self.statusCol, 'false', red)
                 elif fileRes.endswith('xlsx'):
                     self.setValueColor(sheetRes, row + 1, self.part101Col + j,
-                                       str(check[j]) + '-->' + str(checkRes[j]) + ':' + str(result[j]), "red")
+                                       f"{check[j]}-->{checkRes[j]}:{result[j]}", "red")
                     self.setValueColor(sheetRes, row + 1, self.section101Col + j, str(initRes[j]), "red")
                     self.setValueColor(sheetRes, row + 1, self.statusCol, 'false', "red")
                 self.consoleFunc('red', f"{check[j]}:实际结果:{checkRes[j]}-->预期结果:{result[j]}")
@@ -387,8 +386,8 @@ class Write(Format, Array):
                 elif fileRes.endswith('xlsx'):
                     self.setValueColor(sheetRes, row + 1, self.expressionCol + i, str(expression[i]), "red")
                     self.setValueColor(sheetRes, row + 1, self.statusCol, 'false', "red")
-                self.consoleFunc('red', '表达式断言失败:' + str(expression[i]))
-                resultDict.append('表达式断言失败:' + str(expression[i]))
+                self.consoleFunc('red', f"表达式断言失败:{expression[i]}")
+                resultDict.append(f"表达式断言失败:{expression[i]}")
                 status = 1
         if currentItera == Iteration - 1:
             if status == 1:
@@ -437,7 +436,7 @@ class Write(Format, Array):
                     for i in range(Iteration):
                         print(row)
                         self.consoleFunc('green', str(row) + ' ' + className)
-                        self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row}个接口【{className}】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                        self.setFlag(sheetName, row, className, '请求开始')
                         if i == Iteration - 1:
                             testResult.append(
                                 self.write(model, row - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration))
@@ -446,18 +445,18 @@ class Write(Format, Array):
                         self.successNum.setText(str(self.status1))
                         self.failNum.setText(str(self.status2))
                         self.skipNum.setText(str(self.status3))
-                        self.result.setText(str(self.status1 + self.status2 + self.status3) + '/' + str(allRows))
-                        self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row}个接口【{className}】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                        self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                        self.setFlag(sheetName, row, className, '请求结束')
                 else:
                     print(row)
                     self.consoleFunc('green', str(row) + ' ' + className)
-                    self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row}个接口【{className}】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.setFlag(sheetName, row, className, '请求开始')
                     testResult.append(self.write(model, row - 1, sheet, bookRes, sheetRes, fileRes, 0, 1))
                     self.successNum.setText(str(self.status1))
                     self.failNum.setText(str(self.status2))
                     self.skipNum.setText(str(self.status3))
-                    self.result.setText(str(self.status1 + self.status2 + self.status3) + '/' + str(allRows))
-                    self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{row}个接口【{className}】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                    self.setFlag(sheetName, row, className, '请求结束')
                 self.consoleFunc('black')
         else:
             # 单个或多个
@@ -467,7 +466,7 @@ class Write(Format, Array):
                 for i in range(Iteration):
                     print(n)
                     self.consoleFunc('green', str(n) + ' ' + className)
-                    self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{n}个接口【{className}】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.setFlag(sheetName, n, className, '请求开始')
                     if i == Iteration - 1:
                         testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration))
                     else:
@@ -475,18 +474,18 @@ class Write(Format, Array):
                     self.successNum.setText(str(self.status1))
                     self.failNum.setText(str(self.status2))
                     self.skipNum.setText(str(self.status3))
-                    self.result.setText(str(self.status1 + self.status2 + self.status3) + '/' + str(allRows))
-                    self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{n}个接口【{className}】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                    self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                    self.setFlag(sheetName, n, className, '请求结束')
             else:
                 print(n)
                 self.consoleFunc('green', str(n) + ' ' + className)
-                self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{n}个接口【{className}】请求开始☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                self.setFlag(sheetName, n, className, '请求开始')
                 testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, 0, 1))
                 self.successNum.setText(str(self.status1))
                 self.failNum.setText(str(self.status2))
                 self.skipNum.setText(str(self.status3))
-                self.result.setText(str(self.status1 + self.status2 + self.status3) + '/' + str(allRows))
-                self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{n}个接口【{className}】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
+                self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                self.setFlag(sheetName, n, className, '请求结束')
             self.consoleFunc('black')
         # 用于html测试报告
         summary['testAll'] = self.status1 + self.status2 + self.status3
@@ -494,3 +493,6 @@ class Write(Format, Array):
         summary['testFail'] = self.status2
         summary['testSkip'] = self.status3
         return dict, testResult
+
+    def setFlag(self, sheetName, row, className, content):
+        self.getToLog(f"{'☆' * 20}【{sheetName}】第{row + 1}个接口【{className}】{content}{'☆' * 20}")
