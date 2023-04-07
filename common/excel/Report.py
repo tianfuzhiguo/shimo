@@ -41,6 +41,6 @@ class Report(ExcelUtil):
             return bookRes, sheetRes, fileRes
         except Exception as e:
             print(e)
-            fileCheck = '文件：' + fileRes + ' 正在被其他程序使用'
+            fileCheck = f"文件：{fileRes} 正在被其他程序使用"
             print(fileCheck)
             self.consoleFunc('red', str(fileCheck))
