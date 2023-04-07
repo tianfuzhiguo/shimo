@@ -424,10 +424,10 @@ class Write(Format, Array):
         :param allRows:全部用例数
         """
         testResult = []
-        summary = {}
+        dict = {}
         if n == '':
             # 全量执行
-            self.consoleFunc('blue', "【" + sheetName + "】", 'size=4')
+            self.consoleFunc('blue', f"【{sheetName}】", 'size=4')
             self.consoleFunc('black')
             for row in range(3, nrows + 1):
                 className = str(self.getValue(fileRes, sheet, row - 1, self.nameCol))
@@ -488,10 +488,10 @@ class Write(Format, Array):
                 self.setFlag(sheetName, n, className, '请求结束')
             self.consoleFunc('black')
         # 用于html测试报告
-        summary['testAll'] = self.status1 + self.status2 + self.status3
-        summary['testPass'] = self.status1
-        summary['testFail'] = self.status2
-        summary['testSkip'] = self.status3
+        dict['testAll'] = self.status1 + self.status2 + self.status3
+        dict['testPass'] = self.status1
+        dict['testFail'] = self.status2
+        dict['testSkip'] = self.status3
         return dict, testResult
 
     def setFlag(self, sheetName, row, className, content):
