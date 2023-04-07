@@ -425,7 +425,7 @@ class Write(Format, Array):
         :param allRows:全部用例数
         """
         testResult = []
-        dict = {}
+        summary = {}
         if n == '':
             # 全量执行
             self.consoleFunc('blue', "【" + sheetName + "】", 'size=4')
@@ -489,8 +489,8 @@ class Write(Format, Array):
                 self.getToLog(f"☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆【{sheetName}】第{n}个接口【{className}】请求结束☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆☆")
             self.consoleFunc('black')
         # 用于html测试报告
-        dict['testAll'] = self.status1 + self.status2 + self.status3
-        dict['testPass'] = self.status1
-        dict['testFail'] = self.status2
-        dict['testSkip'] = self.status3
+        summary['testAll'] = self.status1 + self.status2 + self.status3
+        summary['testPass'] = self.status1
+        summary['testFail'] = self.status2
+        summary['testSkip'] = self.status3
         return dict, testResult
