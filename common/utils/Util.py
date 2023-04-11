@@ -271,7 +271,8 @@ class Util(SmLog, Init):
         :param row: 行号
         :param conn: 数据库连接对象
         """
-        param = self.repVar(str(param))
+        param = str(param)
+        param = self.repVar(param)
         param = self.rep(file, sheet, row, conn, param)
         param = self.repRel(param)
         return param
