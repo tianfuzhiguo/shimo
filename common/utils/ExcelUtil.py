@@ -9,7 +9,7 @@ Created on 2022年1月6日
 '''
 
 
-class ExcelUtil():
+class ExcelUtil:
 
     def readExcel(self, file):
         """
