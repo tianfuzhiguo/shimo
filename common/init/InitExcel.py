@@ -16,7 +16,7 @@ class InitExcel(ExcelUtil):
         """
         book = ''
         try:
-            book = self.readExcel(path + '/' + file)
+            book = self.readExcel(f'{path}/{file}')
             return book
         except Exception as e:
             print(e)
@@ -28,7 +28,7 @@ class InitExcel(ExcelUtil):
         获取页签及其行数、列数
         """
         try:
-            book = self.readExcel(path + '/' + file)
+            book = self.readExcel(f'{path}/{file}')
         except Exception as e:
             self.consoleFunc('red', str(e))
         try:
@@ -42,14 +42,14 @@ class InitExcel(ExcelUtil):
                 nrows = sheet.max_row
                 ncols = sheet.max_column
             try:
-                isExists = os.path.exists(path + '/result/history')
+                isExists = os.path.exists(f'{path}/result/history')
                 if not isExists:
-                    os.makedirs(path + '/result/history')
-                fileList = os.listdir(path + '/result/')
+                    os.makedirs(f'{path}/result/history')
+                fileList = os.listdir(f'{path}/result/')
                 for i in range(len(fileList)):
                     if str(date) not in str(fileList[i]) and str('report') in str(fileList[i]):
                         try:
-                            shutil.move(path + '/result/' + str(fileList[i]), path + '/result/history')
+                            shutil.move(f'{path}/result/{fileList[i]}', f'{path}/result/history')
                         except Exception as e:
                             print(e)
                 return sheet, nrows, ncols
