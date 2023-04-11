@@ -90,10 +90,10 @@ class Write(Format, Array):
                 res = self.getArray(fileRes, sheet, row, self.resTextCol, self.resHeaderCol)
                 expression = self.getArray(fileRes, sheet, row, self.expressionCol, self.statusCol)
 
-                statusCode = [self.repAll(str(item), fileRes, sheet, row, conn) for item in statusCode]
-                resHeader = [self.repAll(str(item), fileRes, sheet, row, conn) for item in resHeader]
-                res = [self.repAll(str(item), fileRes, sheet, row, conn) for item in res]
-                expression = [self.repAll(str(item), fileRes, sheet, row, conn) for item in expression]
+                statusCode = [self.repAll(item, fileRes, sheet, row, conn) for item in statusCode]
+                resHeader = [self.repAll(item, fileRes, sheet, row, conn) for item in resHeader]
+                res = [self.repAll(item, fileRes, sheet, row, conn) for item in res]
+                expression = [self.repAll(item, fileRes, sheet, row, conn) for item in expression]
                 # 数据恢复之前把所有数据库相关的操作处理完
                 resMsg = self.restore(fileRes, sheet, row, conn)
                 # 数据库恢复部分的SQL异常
@@ -160,7 +160,8 @@ class Write(Format, Array):
                         form = 'jsonp'
                     except Exception as e:
                         print(e)
-        except:
+        except Exception as e:
+            print(e)
             if str(r) != '':
                 self.consoleFunc('red', str(r))
         return form, ss
@@ -177,7 +178,7 @@ class Write(Format, Array):
         # JSON解析中不对异常情况进行处理，如有异常直接解析失败
         className = str(self.getValue(fileRes, sheet, row - 1, self.nameCol))
         self.setFlag(sheetName, row + 1, className, '解析开始')
-        self.consoleFunc('green', str(row + 1) + ' ' + str(self.getValue(fileRes, sheet, row, self.nameCol)))
+        self.consoleFunc('green', f'{row + 1} {self.getValue(fileRes, sheet, row, self.nameCol)}')
         try:
             conn = self.getConn(fileRes, sheet, row)
             s1, s2 = self.jsonFormat(fileRes, sheet, row, conn)
@@ -212,7 +213,7 @@ class Write(Format, Array):
             self.consoleFunc('red', '迭代次数只能为空或非负整数')
             self.status3 = self.status3 + 1
             iteraValue = self.getValue(fileRes, sheet, row, self.IterationCol)
-            skipDict.append("迭代次数异常:" + str(iteraValue))
+            skipDict.append(f"迭代次数异常:{iteraValue}")
             # 标识结果为：skip，并设背景为蓝色
             if fileRes.endswith('xls'):
                 sheetRes.write(row, self.IterationCol, iteraValue, blue)
@@ -224,7 +225,7 @@ class Write(Format, Array):
             if '数据库异常' in str(msg):
                 if msg[0][1] == self.DBCol and msg[1] == []:
                     # 有sql未选择数据库
-                    self.getError(str('有sql语句而没有连接数据库'))
+                    self.getError('有sql语句而没有连接数据库')
                     self.consoleFunc('red', '有sql语句而没有连接数据库')
                     self.consoleFunc('red', str(msg[0]))
                 elif msg[0][1] == self.DBCol and msg[1] != []:
@@ -246,7 +247,7 @@ class Write(Format, Array):
                 self.getToLog(str(msg))
                 for i in range(1, len(msg)):
                     exceValue = self.getValue(fileRes, sheet, row, int(msg[i]))
-                    exceValue = self.repAll(str(exceValue), fileRes, sheet, row, conn)
+                    exceValue = self.repAll(exceValue, fileRes, sheet, row, conn)
                     self.consoleFunc('red', exceValue)
                     skipDict.append(exceValue)
                     self.getToLog(exceValue)
@@ -309,8 +310,7 @@ class Write(Format, Array):
         for j in range(len(check)):
             if str(checkRes[j]) != str(result[j]):
                 if fileRes.endswith('xls'):
-                    sheetRes.write(row, self.part101Col + j,
-                                   f"{check[j]}-->{checkRes[j]}:{result[j]}", red)
+                    sheetRes.write(row, self.part101Col + j, f"{check[j]}-->{checkRes[j]}:{result[j]}", red)
                     sheetRes.write(row, self.section101Col + j, str(initRes[j]), red)
                     sheetRes.write(row, self.statusCol, 'false', red)
                 elif fileRes.endswith('xlsx'):
@@ -368,7 +368,6 @@ class Write(Format, Array):
         # 校验表达式
         js = self.getResType(r)
         for i in range(len(expression)):
-            expreFlag = True
             expression[i] = str(expression[i]).replace("r.json()", js)
             if expression[i] == '':
                 expreFlag = True
@@ -466,7 +465,7 @@ class Write(Format, Array):
                     self.setFlag(sheetName, n, className, '请求结束')
             else:
                 print(n)
-                self.consoleFunc('green', str(n) + ' ' + className)
+                self.consoleFunc('green', f'{n} {className}')
                 self.setFlag(sheetName, n, className, '请求开始')
                 testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, 0, 1))
                 self.set_result(self.status1, self.status2, self.status3, allRows)
