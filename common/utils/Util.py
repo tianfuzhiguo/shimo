@@ -74,8 +74,8 @@ class Util(SmLog, Init):
                     data.append('')
                 else:
                     cursor.execute(item)
-                    dd = cursor.fetchone()
-                    data.append(None if dd == None else dd[0])
+                    one = cursor.fetchone()
+                    data.append(None if one is None else one[0])
                 column = column + 1
             cursor.close()
             conn[0][0].commit()
@@ -212,12 +212,12 @@ class Util(SmLog, Init):
         else:
             cursor = conn[0][0].cursor()
             for item in sqlArray:
-                if (item == ''):
+                if item == '':
                     data.append('')
                 else:
                     cursor.execute(item)
-                    dd = cursor.fetchone()
-                    data.append(None if dd == None else dd[0])
+                    one = cursor.fetchone()
+                    data.append(None if one is None else one[0])
                     conn[0][0].commit()
             cursor.close()
             return data
