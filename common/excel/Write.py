@@ -36,10 +36,10 @@ class Write(Format, Array):
         iteraValue = self.getValue(fileRes, sheet, row, self.IterationCol)
         url = str(self.getValue(fileRes, sheet, row, self.urlCol))
         url = self.repRel(url)
-        url = self.repVar(str(url))
+        url = self.repVar(url)
         className = str(self.getValue(fileRes, sheet, row, self.nameCol))
         className = self.repRel(className)
-        className = self.repVar(str(className))
+        className = self.repVar(className)
         if isinstance(iteraValue, int) is False and iteraValue != '':
             skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, '迭代异常', currentItera, Iteration, '')
             status = '异常'
