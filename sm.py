@@ -158,7 +158,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText('0/' + str(allRows))
+                    ex.result.setText(f'0/{allRows}')
             else:
                 items = []
                 st = []
@@ -177,7 +177,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                     for i in range(3, nrows + 1):
                         if str(self.getValue(file, sheet, i - 1, IterationCol)).upper() == '0':
                             noRuns = noRuns + 1
-                    ex.result.setText('0/' + str(nrows - 2 - noRuns))
+                    ex.result.setText(f'0/{(nrows - 2 - noRuns)}')
                 else:
                     ex.console.clear()
                     ex.consoleFunc('red', str(rpt))
@@ -200,7 +200,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 pass
             else:
                 self.qSheetName.clear()
-                sheetNames = self.getSheetNames(path + '/' + file)
+                sheetNames = self.getSheetNames(f'{path}/{file}')
                 # 填充页签下拉列表
                 for i in range(len(sheetNames) + 1):
                     if i == 0:
@@ -237,7 +237,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText('0/' + str(allRows))
+                    ex.result.setText(f'0/{allRows}')
             else:
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 items = []
@@ -272,7 +272,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 self.example.qCheckBox[exa[i] - 2].setChecked(True)
                             except Exception as e:
                                 print(e)
-                    ex.result.setText('0/' + str(nrows - 2 - noRuns))
+                    ex.result.setText(f'0/{(nrows - 2 - noRuns)}')
                 else:
                     ex.console.clear()
                     ex.consoleFunc('red', str(rpt))
@@ -298,10 +298,10 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                reportName = file[:file.index('.xls')] + '-' + date + '-report.xls'
+                reportName = f"{file[:file.index('.xls')]}-{date}-report.xls"
                 if file.endswith('xlsx'):
-                    reportName +='x'
-                excel = 'r' + "'" + path + '/result/' + reportName + "'"
+                    reportName += 'x'
+                excel = f"r'{path}/result/{reportName}'"
                 os.startfile(eval(excel))
         except Exception as e:
             print(e)
@@ -551,8 +551,8 @@ class debugClass(QThread, DetailUI):
             endTime = datetime.datetime.now()
             second = str(endTime - startTime)
             duration = second[:second.index('.')]
-            dd = duration.split(':')
-            duration = dd[0] + '小时 ' + dd[1] + '分 ' + dd[2] + '秒'
+            dura = duration.split(':')
+            duration = f'{dura[0]}小时 {dura[1]}分 {dura[2]}秒'
             taskName = file[:file.index(".")]
             # 测试结果存到字典中，用于html测试报告
             dict['testName'] = taskName  # 项目名称
