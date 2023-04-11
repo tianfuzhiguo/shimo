@@ -486,4 +486,4 @@ class Write(Format, Array):
         self.successNum.setText(str(success))
         self.failNum.setText(str(fail))
         self.skipNum.setText(str(skip))
-        self.result.setText(str((success + fail + skip) / all_rows))
+        self.result.setText(f'{success + fail + skip} / {all_rows}')
