@@ -1,3 +1,4 @@
+import cgitb
 import datetime
 import os
 import sys
@@ -19,6 +20,7 @@ from common.ui.MainWindow import Ui_MainWindow
 #author: dujianxiao
 '''
 date = time.strftime("%Y%m%d")
+sheetNames = fname = bookRes = sheetRes = fileRes = path = file = sheetName = sheet = nrows = ""
 
 
 class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
@@ -99,7 +101,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 self.initConfig(path)
                 self.initLog(path)
                 # 创建用例结果文件
-                sheetNames = self.getSheetNames(path + '/' + file)
+                sheetNames = self.getSheetNames(f'{path}/{file}')
                 bookRes, sheetRes, fileRes = self.createReport(date, path, file, sheetNames)
                 self.qSheetName.clear()
                 self.example.clear()
@@ -122,7 +124,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                os.startfile(eval('r' + "'" + fname + "'"))
+                os.startfile(eval(f"r'{fname}'"))
         except Exception as e:
             print(e)
             ex.console.clear()
@@ -169,7 +171,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 noRuns = 0
                 if rpt == '':
                     for i in range(3, nrows + 1):
-                        st.append(str(i) + ' ' + str(self.getValue(file, sheet, i - 1, ex.nameCol)))
+                        st.append(f'{i} {self.getValue(file, sheet, i - 1, ex.nameCol)}')
                         st.append(str(self.getValue(file, sheet, i - 1, ex.IterationCol)))
                         items.append(st)
                         st = []
@@ -201,7 +203,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 pass
             else:
                 self.qSheetName.clear()
-                sheetNames = self.getSheetNames(f'{path}/{file}')
+                sheetNames = self.getSheetNames(f"{path}/{file}")
                 # 填充页签下拉列表
                 for i in range(len(sheetNames) + 1):
                     if i == 0:
@@ -273,7 +275,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 self.example.qCheckBox[exa[i] - 2].setChecked(True)
                             except Exception as e:
                                 print(e)
-                    ex.result.setText(f'0/{(nrows - 2 - noRuns)}')
+                    ex.result.setText(f"0/{nrows - 2 - noRuns}")
                 else:
                     ex.console.clear()
                     ex.consoleFunc('red', str(rpt))
@@ -286,7 +288,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         try:
             exa = self.example.Selectlist()
-            ex.result.setText('0/' + str(len(exa)))
+            ex.result.setText(f"0/{len(exa)}")
         except Exception as e:
             print(e)
 
@@ -299,7 +301,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                reportName = f"{file[:file.index('.xls')]}-{date}-report.xls"
+                reportName = file[:file.index('.xls')] + '-' + date + '-report.xls'
                 if file.endswith('xlsx'):
                     reportName += 'x'
                 excel = f"r'{path}/result/{reportName}'"
@@ -495,7 +497,6 @@ class debugClass(QThread, DetailUI):
             testResult = []
             # 全量
             if sheetValue == '全部' and ex.qSheetName.currentIndex() == 0:
-
                 for i in range(len(sheetNames)):
                     sheet, nrows = ex.initFile(date, path, file, sheetNames[i])
                     rpt = ex.verTemp(sheetNames[i], sheet, bookRes, sheetRes[i], fileRes)
@@ -552,8 +553,8 @@ class debugClass(QThread, DetailUI):
             endTime = datetime.datetime.now()
             second = str(endTime - startTime)
             duration = second[:second.index('.')]
-            dura = duration.split(':')
-            duration = f'{dura[0]}小时 {dura[1]}分 {dura[2]}秒'
+            dd = duration.split(':')
+            duration = f"{dd[0]}小时 {dd[1]}分 {dd[2]}秒"
             taskName = file[:file.index(".")]
             # 测试结果存到字典中，用于html测试报告
             dict['testName'] = taskName  # 项目名称
@@ -575,6 +576,11 @@ class debugClass(QThread, DetailUI):
 
 
 if __name__ == "__main__":
+    log_dir = os.path.join(os.getcwd(), 'log')
+    if not os.path.exists(log_dir):
+        os.mkdir(log_dir)
+    cgitb.enable(format='text', logdir=log_dir)
+
     app = 0
     app = QApplication(sys.argv)  #
     QssStyle1 = '''
