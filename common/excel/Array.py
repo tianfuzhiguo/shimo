@@ -48,7 +48,7 @@ class Array():
         sqlArr = self.getSqlResultArray(file, sheet, row, conn, self.part301Col, self.section101Col)
         arr = jsonValue + sqlArr
         arr = [self.repAll(item, file, sheet, row, conn) for item in arr]
-        self.getToLog('校验字段：' + str(arr))
+        self.getToLog(f'校验字段：{arr}')
         return arr
 
     def expResult(self, file, sheet, row, conn):
@@ -64,5 +64,5 @@ class Array():
         arr3 = self.getArray(file, sheet, row, self.section301Col, self.resTextCol)
         arr = arr1 + arr2 + arr3
         arr = [self.repAll(item, file, sheet, row, conn) for item in arr]
-        self.getToLog('预期结果：' + str(arr))
+        self.getToLog(f'预期结果：{arr}')
         return arr
