@@ -40,7 +40,7 @@ class ExcelUtil():
                 flag = flag
         elif file.endswith('xlsx'):
             flag = sheet.cell(row=row + 1, column=columnNum).value
-            if flag == None:
+            if flag is None:
                 flag = ''
         return flag
 
