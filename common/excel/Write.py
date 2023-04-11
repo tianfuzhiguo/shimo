@@ -442,20 +442,14 @@ class Write(Format, Array):
                                 self.write(model, row - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration))
                         else:
                             self.write(model, row - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration)
-                        self.successNum.setText(str(self.status1))
-                        self.failNum.setText(str(self.status2))
-                        self.skipNum.setText(str(self.status3))
-                        self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                        self.set_result(self.status1, self.status2, self.status3, allRows)
                         self.setFlag(sheetName, row, className, '请求结束')
                 else:
                     print(row)
                     self.consoleFunc('green', str(row) + ' ' + className)
                     self.setFlag(sheetName, row, className, '请求开始')
                     testResult.append(self.write(model, row - 1, sheet, bookRes, sheetRes, fileRes, 0, 1))
-                    self.successNum.setText(str(self.status1))
-                    self.failNum.setText(str(self.status2))
-                    self.skipNum.setText(str(self.status3))
-                    self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                    self.set_result(self.status1, self.status2, self.status3, allRows)
                     self.setFlag(sheetName, row, className, '请求结束')
                 self.consoleFunc('black')
         else:
@@ -471,20 +465,14 @@ class Write(Format, Array):
                         testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration))
                     else:
                         self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration)
-                    self.successNum.setText(str(self.status1))
-                    self.failNum.setText(str(self.status2))
-                    self.skipNum.setText(str(self.status3))
-                    self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                    self.set_result(self.status1, self.status2, self.status3, allRows)
                     self.setFlag(sheetName, n, className, '请求结束')
             else:
                 print(n)
                 self.consoleFunc('green', str(n) + ' ' + className)
                 self.setFlag(sheetName, n, className, '请求开始')
                 testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, 0, 1))
-                self.successNum.setText(str(self.status1))
-                self.failNum.setText(str(self.status2))
-                self.skipNum.setText(str(self.status3))
-                self.result.setText(f"{self.status1 + self.status2 + self.status3}/{allRows}")
+                self.set_result(self.status1, self.status2, self.status3, allRows)
                 self.setFlag(sheetName, n, className, '请求结束')
             self.consoleFunc('black')
         # 用于html测试报告
@@ -496,3 +484,9 @@ class Write(Format, Array):
 
     def setFlag(self, sheetName, row, className, content):
         self.getToLog(f"{'☆' * 20}【{sheetName}】第{row + 1}个接口【{className}】{content}{'☆' * 20}")
+        
+    def set_result(self, success, fail, skip, all_rows):
+        self.successNum.setText(str(success))
+        self.failNum.setText(str(fail))
+        self.skipNum.setText(str(skip))
+        self.result.setText(str(success + fail + skip/all_rows))
