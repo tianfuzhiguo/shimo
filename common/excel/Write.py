@@ -40,7 +40,7 @@ class Write(Format, Array):
         className = str(self.getValue(fileRes, sheet, row, self.nameCol))
         className = self.repRel(className)
         className = self.repVar(str(className))
-        if isinstance(iteraValue, int) == False and iteraValue != '':
+        if isinstance(iteraValue, int) is False and iteraValue != '':
             skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, '迭代异常', currentItera, Iteration, '')
             status = '异常'
             duration = '--'
@@ -156,7 +156,6 @@ class Write(Format, Array):
                     try:
                         # 格式为jsonp
                         eval('json.loads(re.search("^[^(]*?\((.*)\)[^)]*$",r.text,re.S).group(1))')
-                        #                         ss=str(json.loads(re.match(".*?({.*}).*",r.text,re.S).group(1)))
                         ss = str(r.text)
                         form = 'jsonp'
                     except Exception as e:
@@ -236,7 +235,6 @@ class Write(Format, Array):
                 else:
                     # sql执行异常
                     for i in range(1, len(msg[0])):
-                        # exceValue = self.getValue(fileRes, sheet, row, int(msg[0][i]))
                         self.consoleFunc('red', msg[1][i - 1])
                     self.consoleFunc('red', str(msg[0]))
                 # 异常信息存skipDict用于html测试报告
@@ -309,7 +307,7 @@ class Write(Format, Array):
             self.setValueColor(sheetRes, row + 1, self.statusCol, 'true', "green")
         # 校验预期结果，精确匹配
         for j in range(len(check)):
-            if str(checkRes[j]) != str(result[j]):  #
+            if str(checkRes[j]) != str(result[j]):
                 if fileRes.endswith('xls'):
                     sheetRes.write(row, self.part101Col + j,
                                    f"{check[j]}-->{checkRes[j]}:{result[j]}", red)
@@ -362,8 +360,7 @@ class Write(Format, Array):
                     sheetRes.write(row, self.statusCol, 'false', red)
                 elif fileRes.endswith('xlsx'):
                     self.setValueColor(sheetRes, row + 1, self.statusCodeCol + i,
-                                       f"{statusCode[i]}-->{r.status_code}:{statusCode[i]}",
-                                       "red")
+                                       f"{statusCode[i]}-->{r.status_code}:{statusCode[i]}", "red")
                     self.setValueColor(sheetRes, row + 1, self.statusCol, 'false', "red")
                 self.consoleFunc('red', f"响应码断言失败:实际结果:{r.status_code}-->预期结果:{statusCode[i]}")
                 resultDict.append(f"响应码断言失败:实际结果:{r.status_code}-->预期结果:{statusCode[i]}")
@@ -435,7 +432,7 @@ class Write(Format, Array):
                 if isinstance(Iteration, int):
                     for i in range(Iteration):
                         print(row)
-                        self.consoleFunc('green', str(row) + ' ' + className)
+                        self.consoleFunc('green', f'{row} {className}')
                         self.setFlag(sheetName, row, className, '请求开始')
                         if i == Iteration - 1:
                             testResult.append(
@@ -459,7 +456,7 @@ class Write(Format, Array):
             if isinstance(Iteration, int):
                 for i in range(Iteration):
                     print(n)
-                    self.consoleFunc('green', str(n) + ' ' + className)
+                    self.consoleFunc('green', f'{n} {className}')
                     self.setFlag(sheetName, n, className, '请求开始')
                     if i == Iteration - 1:
                         testResult.append(self.write(model, n - 1, sheet, bookRes, sheetRes, fileRes, i, Iteration))
@@ -483,10 +480,10 @@ class Write(Format, Array):
         return dict, testResult
 
     def setFlag(self, sheetName, row, className, content):
-        self.getToLog(f"{'☆' * 20}【{sheetName}】第{row + 1}个接口【{className}】{content}{'☆' * 20}")
-        
+        self.getToLog(f"{'☆' * 20}【{sheetName}】第{row}个接口【{className}】{content}{'☆' * 20}")
+
     def set_result(self, success, fail, skip, all_rows):
         self.successNum.setText(str(success))
         self.failNum.setText(str(fail))
         self.skipNum.setText(str(skip))
-        self.result.setText(str(success + fail + skip/all_rows))
+        self.result.setText(str((success + fail + skip) / all_rows))
