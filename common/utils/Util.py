@@ -20,7 +20,7 @@ class Util(SmLog, Init):
         :param row:行号
         """
         DB = self.getValue(file, sheet, row, self.DBCol)
-        DB = self.repVar(str(DB))
+        DB = self.repVar(DB)
         if DB == '':
             return [[]]
         else:
@@ -32,7 +32,7 @@ class Util(SmLog, Init):
                     DB = "${DB2}"
                 if DB == "DB3":
                     DB = "${DB3}"
-                DB = self.repVar(str(DB))
+                DB = self.repVar(DB)
                 conn = eval(DB)
             except Exception as e:
                 print(e)
@@ -92,11 +92,11 @@ class Util(SmLog, Init):
         conn = self.getConn(file, sheet, row)
         msg = ['数据库异常']
         SqlMsg = []
-        sqlArray = self.getArray(file, sheet, row, self.part301Col, self.section101Col) + \
-                   self.getArray(file, sheet, row, self.section201Col, self.section301Col) + \
-                   self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col)
-        sqlArray = [self.repRel(str(item)) for item in sqlArray]
-        sqlArray = [self.repVar(str(item)) for item in sqlArray]
+        sqlArray = (self.getArray(file, sheet, row, self.part301Col, self.section101Col) +
+                    self.getArray(file, sheet, row, self.section201Col, self.section301Col) +
+                    self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col))
+        sqlArray = [self.repRel(item) for item in sqlArray]
+        sqlArray = [self.repVar(item) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -139,8 +139,8 @@ class Util(SmLog, Init):
         SqlMsg = []
         column1 = self.init001Col
         sqlArray = self.getArray(file, sheet, row, self.init001Col, self.restore001Col)
-        sqlArray = [self.repRel(str(item)) for item in sqlArray]
-        sqlArray = [self.repVar(str(item)) for item in sqlArray]
+        sqlArray = [self.repRel(item) for item in sqlArray]
+        sqlArray = [self.repVar(item) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -173,8 +173,8 @@ class Util(SmLog, Init):
         SqlMsg = []
         column1 = self.restore001Col
         sqlArray = self.getArray(file, sheet, row, self.restore001Col, self.dyparam001Col)
-        sqlArray = [self.repRel(str(item)) for item in sqlArray]
-        sqlArray = [self.repVar(str(item)) for item in sqlArray]
+        sqlArray = [self.repRel(item) for item in sqlArray]
+        sqlArray = [self.repVar(item) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -205,8 +205,8 @@ class Util(SmLog, Init):
         """
         data = []
         sqlArray = self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col)
-        sqlArray = [self.repRel(str(item)) for item in sqlArray]
-        sqlArray = [self.repVar(str(item)) for item in sqlArray]
+        sqlArray = [self.repRel(item) for item in sqlArray]
+        sqlArray = [self.repVar(item) for item in sqlArray]
         if conn == [[]]:
             return []
         else:
@@ -227,6 +227,7 @@ class Util(SmLog, Init):
         用户变量替换
         :param param:需要替换的值
         """
+        param = str(param)
         for i in range(len(self.userParams)):
             if '${' + self.userParams[i] + '}' in param:
                 param = param.replace('${' + str(self.userParams[i]) + '}', str(self.userParamsValue[i]))
@@ -237,6 +238,7 @@ class Util(SmLog, Init):
         接口变量替换
         :param param:需要替换的值
         """
+        param = str(param)
         for i in range(len(self.userVar)):
             if '${' + str(self.userVar[i]) + '}' in str(param):
                 param = param.replace('${' + str(self.userVar[i]) + '}', str(self.userVarValue[i]))
@@ -266,6 +268,7 @@ class Util(SmLog, Init):
     def repAll(self, param, file, sheet, row, conn):
         """
         三者替换，替换用户变量、动态参数、接口变量
+        :param param:
         :param file:用例文件
         :param sheet:
         :param row: 行号
