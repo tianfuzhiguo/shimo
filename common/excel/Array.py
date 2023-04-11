@@ -33,6 +33,7 @@ class Array():
     def checkRes(self, r, file, sheet, row, conn):
         """
         校验字段结果数组
+        :param r:
         :param file:用例文件
         :param sheet:
         :param row:行号
