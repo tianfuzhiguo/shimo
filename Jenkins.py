@@ -101,7 +101,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 self.initConfig(path)
                 self.initLog(path)
                 # 创建用例结果文件
-                sheetNames = self.getSheetNames(path + '/' + file)
+                sheetNames = self.getSheetNames(f'{path}/{file}')
                 bookRes, sheetRes, fileRes = self.createReport(date, path, file, sheetNames)
                 self.qSheetName.clear()
                 self.example.clear()
@@ -124,7 +124,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             if fname in ['请选择文件', '']:
                 ex.console.clear()
             else:
-                os.startfile(eval('r' + "'" + fname + "'"))
+                os.startfile(eval(f"r'{fname}'"))
         except Exception as e:
             print(e)
             ex.console.clear()
@@ -161,7 +161,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText('0/' + str(allRows))
+                    ex.result.setText(f'0/{allRows}')
             else:
                 items = []
                 st = []
@@ -171,7 +171,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 noRuns = 0
                 if rpt == '':
                     for i in range(3, nrows + 1):
-                        st.append(str(i) + ' ' + str(self.getValue(file, sheet, i - 1, ex.nameCol)))
+                        st.append(f'{i} {self.getValue(file, sheet, i - 1, ex.nameCol)}')
                         st.append(str(self.getValue(file, sheet, i - 1, ex.IterationCol)))
                         items.append(st)
                         st = []
@@ -180,7 +180,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                     for i in range(3, nrows + 1):
                         if str(self.getValue(file, sheet, i - 1, IterationCol)).upper() == '0':
                             noRuns = noRuns + 1
-                    ex.result.setText('0/' + str(nrows - 2 - noRuns))
+                    ex.result.setText(f'0/{(nrows - 2 - noRuns)}')
                 else:
                     ex.console.clear()
                     ex.consoleFunc('red', str(rpt))
@@ -240,7 +240,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText('0/' + str(allRows))
+                    ex.result.setText(f'0/{allRows}')
             else:
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 items = []
