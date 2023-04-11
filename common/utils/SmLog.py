@@ -8,12 +8,12 @@ class SmLog:
 
     def initLog(self, path):
         global logger
-        filename = path + '/result/info.log'
+        filename = f'{path}/result/info.log'
         try:
-            isExists = os.path.exists(path + '/result')
+            isExists = os.path.exists(f'{path}/result')
             if not isExists:
-                os.makedirs(path + '/result')
-            filename = path + '/result/info.log'
+                os.makedirs(f'{path}/result')
+            filename = f'{path}/result/info.log'
             # 每次运行删除之前的日志，
             os.remove(filename)
         except:
