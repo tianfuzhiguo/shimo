@@ -304,10 +304,7 @@ class DetailUI(Ui_mainWindow,QMainWindow,Write,Report,Template):
                     '''
                     if exa!=[]:
                         for i in range(len(exa)):
-                            try:
-                                self.example.qCheckBox[exa[i]-2].setChecked(True)
-                            except Exception as e:
-                                print(e)
+                            self.example.qCheckBox[exa[i]-2].setChecked(True)
                     ex.result.setText('0/'+str(nrows-2-noRuns))
                 else:
                     ex.console.clear()
