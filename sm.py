@@ -271,10 +271,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                     # 保持上一次的选中状态
                     if exa:
                         for i in range(len(exa)):
-                            try:
-                                self.example.qCheckBox[exa[i] - 2].setChecked(True)
-                            except Exception as e:
-                                print(e)
+                            self.example.qCheckBox[exa[i] - 2].setChecked(True)
                     ex.result.setText(f"0/{nrows - 2 - noRuns}")
                 else:
                     ex.console.clear()
