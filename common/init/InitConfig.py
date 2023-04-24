@@ -23,23 +23,12 @@ class InitConfig():
             fileData.append(DB1)
             fileData.append(DB2)
             fileData.append(DB3)
-            try:
-                #读取conf.ini中的用户自定义变量
-                userParams = []
-                userParamsValue = []
-                with open(path + '/conf.ini', encoding='utf-8') as f:
-                    for line in f:
-                        line = line.strip('\n')
-                        if 0 < len(line) < 9:
-                            if line[0] != '#':
-                                userParams.append(line[0:line.find('=')])
-                                userParamsValue.append(line[line.find('=') + 1:])
-                        elif len(line) >= 9:
-                            if line[0] != '#' and line[0:9] != '[section]':
-                                userParams.append(line[0:line.find('=')])
-                                userParamsValue.append(line[line.find('=') + 1:])
-            except Exception as e:
-                print(e)
+            items = config.items('section')
+            userParams = []
+            userParamsValue = []
+            for i in range(0, len(items)):
+                userParams.append(items[i][0])
+                userParamsValue.append(items[i][1])
             return fileData, userParams, userParamsValue
         except Exception as e:
             self.consoleFunc('red', '初始化conf.ini失败:')
