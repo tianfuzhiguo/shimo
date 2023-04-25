@@ -1,8 +1,8 @@
+import os
 import openpyxl
 import shutil
 import xlrd
 from xlutils.copy import copy
-
 from common.utils.ExcelUtil import ExcelUtil
 
 '''
@@ -24,8 +24,8 @@ class Report(ExcelUtil):
         try:
             sheetRes = []
             fileSrc = str(path).replace('/', '\\') + '\\'
-            fileRes = fileSrc + 'result\\' + file[:-4] + '-' + str(reportDate) + '-report.xls'
-            book = self.readExcel(path + '/' + file)
+            fileRes = f'{fileSrc}result\\{file[:-4]}-{reportDate}-report.xls'
+            book = self.readExcel(os.path.join(path, file))
             if file.endswith('xls'):
                 shutil.copyfile(fileSrc + file, fileRes)
                 bookRes = copy(book)
