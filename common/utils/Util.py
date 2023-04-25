@@ -110,7 +110,6 @@ class Util(SmLog, Init):
                         self.getToLog(item)
                         self.getError(str(e))
                         SqlMsg.append(str(e))
-                #                     msg.append(str(e))
                 if column1 == self.section101Col - 1:
                     column1 = self.section201Col - 1
                 if column1 == self.section301Col - 1:
@@ -144,7 +143,7 @@ class Util(SmLog, Init):
                         item = self.rep(file, sheet, row, conn, item)
                         cursor.execute(item)
                         conn[0][0].commit()
-                        self.getToLog('数据初始化：' + item)
+                        self.getToLog(f'数据初始化：{item}')
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
@@ -179,7 +178,7 @@ class Util(SmLog, Init):
                         item = self.rep(file, sheet, row, conn, item)
                         cursor.execute(item)
                         conn[0][0].commit()
-                        self.getToLog('数据恢复：' + item)
+                        self.getToLog(f'数据恢复：{item}')
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
