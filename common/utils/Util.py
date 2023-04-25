@@ -108,6 +108,7 @@ class Util(SmLog, Init):
                     except Exception as e:
                         print(e)
                         msg.append(column1)
+                        self.getToLog(item)
                         self.getError(str(e))
                         SqlMsg.append(str(e))
                 #                     msg.append(str(e))
