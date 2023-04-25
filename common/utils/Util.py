@@ -25,14 +25,7 @@ class Util(SmLog, Init):
             return [[]]
         else:
             try:
-                # DB1,DB2,DB3是配置文件中预置的3个数据库
-                if DB == "DB1":
-                    DB = "${DB1}"
-                if DB == "DB2":
-                    DB = "${DB2}"
-                if DB == "DB3":
-                    DB = "${DB3}"
-                DB = self.repVar(DB)
+                DB = self.repVar(f'${DB}')
                 conn = eval(DB)
             except Exception as e:
                 print(e)
