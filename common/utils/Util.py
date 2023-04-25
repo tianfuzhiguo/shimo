@@ -149,6 +149,7 @@ class Util(SmLog, Init):
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
+                        self.getToLog(item)
                         self.getError(str(e))
                         SqlMsg.append(str(e))
                 column1 = column1 + 1
@@ -183,6 +184,7 @@ class Util(SmLog, Init):
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
+                        self.getToLog(item)
                         self.getError(str(e))
                         SqlMsg.append(str(e))
                 column1 = column1 + 1
