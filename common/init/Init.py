@@ -15,8 +15,6 @@ class Init(InitConfig, InitExcel):
     ncols = ''
 
     def __init__(self):
-        self.userParamsValue = None
-        self.userParams = None
         self.fileData = None
 
     def initFile(self, date, path, file, sheetName):
@@ -27,7 +25,7 @@ class Init(InitConfig, InitExcel):
         :param file:
         :param sheetName:
         """
-        self.fileData, self.userParams, self.userParamsValue = self.initConfig(path)
+        self.fileData = self.initConfig(path)
         book = self.getBook(path, file)
         sheet, nrows, self.ncols = self.getSheet(date, path, sheetName, file, book)
         self.column = self.getColumn(file, sheet)
