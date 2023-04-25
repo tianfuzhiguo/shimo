@@ -20,7 +20,6 @@ class Util(SmLog, Init):
         :param row:行号
         """
         DB = self.getValue(file, sheet, row, self.DBCol)
-        DB = self.repVar(DB)
         if DB == '':
             return [[]]
         else:
