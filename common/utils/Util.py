@@ -15,9 +15,9 @@ class Util(SmLog, Init):
     def getConn(self, file, sheet, row):
         """
         连接数据库
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
+        @param file:用例文件
+        @param sheet:
+        @param row:行号
         """
         DB = self.getValue(file, sheet, row, self.DBCol)
         if DB == '':
@@ -45,12 +45,12 @@ class Util(SmLog, Init):
     def getSqlResultArray(self, file, sheet, row, conn, start, end):
         """
         获取sql结果数组
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param conn:数据库连接对象
-        :param start:
-        :param end:
+        @param file:用例文件
+        @param sheet:
+        @param row:行号
+        @param conn:数据库连接对象
+        @param start:
+        @param end:
         """
         data = []
         sqlArray = self.getArray(file, sheet, row, start, end)
@@ -76,10 +76,10 @@ class Util(SmLog, Init):
     def sqlExcept(self, file, sheet, row, conn):
         """
         此方法仅用作验证SQL句是否正确
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param conn:数据库连接对象
+        @param file:用例文件
+        @param sheet:
+        @param row:行号
+        @param conn:数据库连接对象
         """
         conn = self.getConn(file, sheet, row)
         msg = ['数据库异常']
@@ -122,10 +122,10 @@ class Util(SmLog, Init):
     def initData(self, file, sheet, row, conn):
         """
         数据初始化
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param conn:数据库连接对象
+        @param file:用例文件
+        @param sheet:
+        @param row:行号
+        @param conn:数据库连接对象
         """
         msg = ['数据库异常']
         SqlMsg = []
@@ -157,10 +157,10 @@ class Util(SmLog, Init):
     def restore(self, file, sheet, row, conn):
         """
         数据恢复
-        :param file:用例文件
-        :param sheet:
-        :param row: 行号
-        :param conn:数据库连接对象
+        @param file:用例文件
+        @param sheet:
+        @param row: 行号
+        @param conn:数据库连接对象
         """
         msg = ['数据库异常']
         SqlMsg = []
@@ -178,11 +178,10 @@ class Util(SmLog, Init):
                         item = self.rep(file, sheet, row, conn, item)
                         cursor.execute(item)
                         conn[0][0].commit()
-                        self.getToLog(f'数据恢复：{item}')
+                        self.getToLog(f'数据恢复： {item}')
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
-                        self.getToLog(item)
                         self.getError(str(e))
                         SqlMsg.append(str(e))
                 column1 = column1 + 1
@@ -192,10 +191,10 @@ class Util(SmLog, Init):
     def dyparam(self, file, sheet, row, conn):
         """
         动态化参数-数据库查询结果作为参数供同一行的其他地方调用
-        :param file:用例文件
-        :param sheet:
-        :param row: 行号
-        :param conn: 数据库连接对象
+        @param file:用例文件
+        @param sheet:
+        @param row: 行号
+        @param conn: 数据库连接对象
         """
         data = []
         sqlArray = self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col)
@@ -219,18 +218,18 @@ class Util(SmLog, Init):
     def repVar(self, param):
         """
         用户变量替换
-        :param param:需要替换的值
+        @param param:需要替换的值
         """
         param = str(param)
-        for i in range(len(self.userParams)):
-            if '${' + self.userParams[i] + '}' in param:
-                param = param.replace('${' + str(self.userParams[i]) + '}', str(self.userParamsValue[i]))
+        for i in range(len(self.fileData)):
+            if '${' + self.fileData[i][0] + '}' in param:
+                param = param.replace('${' + str(self.fileData[i][0]) + '}', str(self.fileData[i][1]))
         return param
 
     def repRel(self, param):
         """
         接口变量替换
-        :param param:需要替换的值
+        @param param:需要替换的值
         """
         param = str(param)
         for i in range(len(self.userVar)):
@@ -241,11 +240,11 @@ class Util(SmLog, Init):
     def rep(self, file, sheet, row, conn, param):
         """
         动态参数替换
-        :param file:用例文件
-        :param sheet:
-        :param row: 行号
-        :param conn: 数据库连接对象
-        :param param: 需要替换的值
+        @param file:用例文件
+        @param sheet:
+        @param row: 行号
+        @param conn: 数据库连接对象
+        @param param: 需要替换的值
         """
         dypArr = []
         dypar = self.dyparam(file, sheet, row, conn)
@@ -262,11 +261,11 @@ class Util(SmLog, Init):
     def repAll(self, param, file, sheet, row, conn):
         """
         三者替换，替换用户变量、动态参数、接口变量
-        :param param:
-        :param file:用例文件
-        :param sheet:
-        :param row: 行号
-        :param conn: 数据库连接对象
+        @param param:
+        @param file:用例文件
+        @param sheet:
+        @param row: 行号
+        @param conn: 数据库连接对象
         """
         param = str(param)
         param = self.repVar(param)
