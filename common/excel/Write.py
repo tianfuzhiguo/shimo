@@ -68,9 +68,7 @@ class Write(Format, Array):
                         # 由于qt性能的原因，每1000个字符暂停100毫秒，100毫秒是一个经验值
                         time.sleep(0.1)
                     # 解决普通模式下客户文字错位和文字颜色与预期不问题
-                    time.sleep(0.1)
-                else:
-                    time.sleep(0.1)
+                time.sleep(0.1)
             except Exception as e:
                 print(e)
             if '异常' in str(msg):
