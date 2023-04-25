@@ -76,13 +76,14 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             self.result.setText('0/0')
             self.initTextNum()
 
-            # 以下7行是jenkins.py的代码，再往下4行是sm.py的代码
+            # 以下8行是jenkins.py的代码，再往下4行是sm.py的代码
             path = os.getcwd()
             path = path.replace('\\', '/')
             fileData = self.initConfig(path)
             self.initLog(path)
-            file = str(fileData[-1][1])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
-            sheetNames = self.getSheetNames(f'{path}/{file}')
+            file = fileData[-1][1]  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
+            fname = f'{path}/{file}'
+            sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
 
             # 以下4行是sm.py的代码，以上9行是jenkins.py的代码
@@ -312,9 +313,9 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
     def createHTMLReport(self, js):
         """
         创建html测试报告
-        :param path:
-        :param file:
-        :param js: json格式的测试结果
+        @param path:
+        @param file:
+        @param js: json格式的测试结果
         """
         try:
             try:
