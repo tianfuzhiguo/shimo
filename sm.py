@@ -71,21 +71,19 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             # 加载文件时清除上一个文件可能存在的请求头信息、接口变量和用户变量
             self.headerManager = ''
             self.userVar = []
-            self.userParams
+            self.fileData = []
             self.example.clear()
             self.result.setText('0/0')
             self.initTextNum()
 
-            # 以下9行是jenkins.py的代码，再往下4行是sm.py的代码
-            # path = os.getcwd()
-            # path = path.replace('\\', '/')
-            # a, b, userParamsValue = self.initConfig(path)
-            # self.initLog(path)
-            # file = str(userParamsValue[-1:])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
-            # file = file[2:-2]
-            # fname = path + '/' + file
-            # sheetNames = self.getSheetNames(fname)
-            # self.fileName.setText(fname)
+            # 以下7行是jenkins.py的代码，再往下4行是sm.py的代码
+            path = os.getcwd()
+            path = path.replace('\\', '/')
+            fileData = self.initConfig(path)
+            self.initLog(path)
+            file = str(fileData[-1][1])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
+            sheetNames = self.getSheetNames(f'{path}/{file}')
+            self.fileName.setText(fname)
 
             # 以下4行是sm.py的代码，以上9行是jenkins.py的代码
             fname, _ = QFileDialog.getOpenFileName(self, 'open file', '/', "files (*.xls *.xlsx)")
