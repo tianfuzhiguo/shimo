@@ -25,7 +25,7 @@ class Util(SmLog, Init):
             return [[]]
         else:
             try:
-                DB = self.repVar(f'${DB}')
+                DB = self.repVar('${' + f'{DB}' + '}')
                 conn = eval(DB)
             except Exception as e:
                 print(e)
