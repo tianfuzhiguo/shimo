@@ -232,9 +232,9 @@ class Util(SmLog, Init):
         @param param:需要替换的值
         """
         param = str(param)
-        for i in range(len(self.userVar)):
-            if '${' + str(self.userVar[i]) + '}' in str(param):
-                param = param.replace('${' + str(self.userVar[i]) + '}', str(self.userVarValue[i]))
+        for k,v in self.interData.items():
+            if '${' + str(k) + '}' in str(param):
+                param = param.replace('${' + str(k) + '}', str(v))
         return param
 
     def rep(self, file, sheet, row, conn, param):
