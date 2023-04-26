@@ -1,7 +1,6 @@
 import cx_Oracle
 import pymssql
 import pymysql
-
 from common.init.Init import Init
 from common.utils.SmLog import SmLog
 
@@ -24,7 +23,7 @@ class Util(SmLog, Init):
             return [[]]
         else:
             try:
-                DB = self.repVar('${' + f'{DB}' + '}')
+                DB = self.repVar(f'${{{DB}}}')
                 conn = eval(DB)
             except Exception as e:
                 print(e)
@@ -178,7 +177,7 @@ class Util(SmLog, Init):
                         item = self.rep(file, sheet, row, conn, item)
                         cursor.execute(item)
                         conn[0][0].commit()
-                        self.getToLog(f'数据恢复： {item}')
+                        self.getToLog(f'数据恢复：{item}')
                     except Exception as e:
                         print(e)
                         msg.append(str(column1))
