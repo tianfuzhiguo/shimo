@@ -222,8 +222,8 @@ class Util(SmLog, Init):
         """
         param = str(param)
         for i in range(len(self.fileData)):
-            if '${' + self.fileData[i][0] + '}' in param:
-                param = param.replace('${' + str(self.fileData[i][0]) + '}', str(self.fileData[i][1]))
+            if f'${{{self.fileData[i][0]}}}' in param:
+                param = param.replace(f'${{{self.fileData[i][0]}}}', str(self.fileData[i][1]))
         return param
 
     def repRel(self, param):
@@ -232,9 +232,9 @@ class Util(SmLog, Init):
         @param param:需要替换的值
         """
         param = str(param)
-        for k,v in self.interData.items():
-            if '${' + str(k) + '}' in str(param):
-                param = param.replace('${' + str(k) + '}', str(v))
+        for k, v in self.interData.items():
+            if f"${{{k}}}" in str(param):
+                param = param.replace(f"${{{k}}}", str(v))
         return param
 
     def rep(self, file, sheet, row, conn, param):
@@ -254,8 +254,8 @@ class Util(SmLog, Init):
             for i in range(1, len(dypar) + 1):
                 dypArr.append('dyparam' + str(i).zfill(3))
             for i in range(len(dypar)):
-                if '${' + str(dypArr[i]) + '}' in param:
-                    param = param.replace('${' + str(dypArr[i]) + '}', str(dypar[i]))
+                if f'${{{dypArr[i]}}}' in param:
+                    param = param.replace(f'${{{dypArr[i]}}}', str(dypar[i]))
         return param
 
     def repAll(self, param, file, sheet, row, conn):
