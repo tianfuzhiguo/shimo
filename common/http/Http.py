@@ -11,10 +11,8 @@ import requests, re, chardet, os, json, datetime, time, demjson3, xmltodict
 
 class Http(Util):
     res = requests.session()
-    userVar = []        # 接口变量数组
-    userVarValue = []   # 接口变量值数组
+    interData = {}      # 接口变量数组
     headerManager = ''  # 请求头
-    relate = ''         # 接口关联
 
     def httpRequest(self, file, sheet, row, conn):
         """
@@ -116,19 +114,18 @@ class Http(Util):
         """
         接口请求成功后存接口变量
         如果已经存在同名的变量则覆盖，否则新建一个变量
+        @param r: 接口响应对象
+        @param interface: 接口变量数组
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
         """
         js = self.getResType(r)
         num = len(interface)
         for i in range(len(interface)):
-            self.relate = self.getValue(file, sheet, row, self.key001Col + i + num)
+            relate = self.getValue(file, sheet, row, self.key001Col + i + num)
             if interface[i] != '':
-                if self.relate not in self.userVar:
-                    self.userVarValue.append(eval(js + interface[i]))
-                    self.userVar.append(self.relate)
-                else:
-                    for j in range(len(self.userVar)):
-                        if self.relate == self.userVar[j]:
-                            self.userVarValue[j] = eval(js + interface[i])
+                self.interData.update({relate: eval(js + interface[i])})
 
     def validateExp(self, r, file, sheet, row, conn):
         """
