@@ -70,7 +70,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         try:
             # 加载文件时清除上一个文件可能存在的请求头信息、接口变量和用户变量
             self.headerManager = ''
-            self.userVar = []
+            self.interData = {}
             self.fileData = []
             self.example.clear()
             self.result.setText('0/0')
@@ -81,12 +81,12 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             path = path.replace('\\', '/')
             fileData = self.initConfig(path)
             self.initLog(path)
-            file = fileData[-1][1]  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
+            file = str(fileData[-1][1])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
             fname = f'{path}/{file}'
             sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
 
-            # 以下4行是sm.py的代码，以上9行是jenkins.py的代码
+            # 以下4行是sm.py的代码，以上8行是jenkins.py的代码
             # fname, _ = QFileDialog.getOpenFileName(self, 'open file', '/', "files (*.xls *.xlsx)")
             # self.fileName.setToolTip(fname)
             # self.fileName.setText(fname)
@@ -195,8 +195,8 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         try:
             # 刷新时清除上一个文件可能存在的请求头信息、接口变量和用户变量
             self.headerManager = ''
-            self.userVar = []
-            self.userParams = []
+            self.interData = {}
+            self.fileData = []
             fname = ex.fileName.text()
             if fname in ['请选择文件', '']:
                 pass
