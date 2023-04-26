@@ -15,17 +15,17 @@ import re, chardet, os, json, datetime, time, demjson3, xmltodict
 
 class Write(Format, Array):
 
-    def write(self, model, row, sheet, bookRes, sheetRes, fileRes, currentItera, Iteration):
+    def write(self, model, row, sheet, bookRes, sheetRes, fileRes, currentIte, iteration):
         """
         写入接口请求结果
-        :param model:模式(普通,简洁)
-        :param row:行号
-        :param sheet:用例文件
-        :param bookRes:用例结果文件
-        :param sheetRes:用例结果文件
-        :param fileRes:用例结果文件
-        :param currentItera:第n次迭代，从0计数
-        :param Iteration:迭代次数
+        @param model:模式(普通,简洁)
+        @param row:行号
+        @param sheet:用例文件
+        @param bookRes:用例结果文件
+        @param sheetRes:用例结果文件
+        @param fileRes:用例结果文件
+        @param currentIte:第n次迭代，从0计数
+        @param iteration:迭代次数
         """
         resp = []
         skipDict = []
@@ -33,15 +33,15 @@ class Write(Format, Array):
         status = '成功'
         dict = {}
         DBExc = []
-        iteraValue = self.getValue(fileRes, sheet, row, self.IterationCol)
+        ite = self.getValue(fileRes, sheet, row, self.IterationCol)
         url = str(self.getValue(fileRes, sheet, row, self.urlCol))
         url = self.repRel(url)
         url = self.repVar(url)
         className = str(self.getValue(fileRes, sheet, row, self.nameCol))
         className = self.repRel(className)
         className = self.repVar(className)
-        if isinstance(iteraValue, int) is False and iteraValue != '':
-            skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, '迭代异常', currentItera, Iteration, '')
+        if isinstance(ite, int) is False and ite != '':
+            skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, '迭代异常', currentIte, iteration, '')
             status = '异常'
             duration = '--'
             resultDict = []
@@ -75,7 +75,7 @@ class Write(Format, Array):
                 if '数据库异常' not in str(msg):
                     url = self.rep(fileRes, sheet, row, conn, url)
                     className = self.rep(fileRes, sheet, row, conn, className)
-                skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, msg, currentItera, Iteration, conn)
+                skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, msg, currentIte, iteration, conn)
                 status = '异常'
             else:
                 url = self.rep(fileRes, sheet, row, conn, url)
@@ -98,14 +98,14 @@ class Write(Format, Array):
                 resMsg = self.restore(fileRes, sheet, row, conn)
                 # 数据库恢复部分的SQL异常
                 if resMsg:
-                    skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, resMsg, currentItera, Iteration,
+                    skipDict = self.setSkip(sheet, row, bookRes, sheetRes, fileRes, resMsg, currentIte, iteration,
                                             conn)
                     status = '异常'
                 else:
                     # 完全没有异常了再执行setResult
                     resultDict = self.setResult(row, bookRes, sheetRes, fileRes, checkRes, check, result,
                                                 initRes, r, duration, res, resHeader, statusCode, expression,
-                                                currentItera, Iteration)
+                                                currentIte, iteration)
                     if len(resultDict) > 0:
                         status = '失败'
             try:
@@ -117,7 +117,7 @@ class Write(Format, Array):
             except Exception as e:
                 print(e)
         # 只统计最后一次的结果
-        if currentItera == Iteration - 1:
+        if currentIte == iteration - 1:
             # 信息存入字典，用于html测试报告
             dict['className'] = className
             dict['url'] = url
@@ -135,7 +135,7 @@ class Write(Format, Array):
     def getType(self, r):
         """
         获取接口响应类型：xml,json,jsonp
-        :param r:接口响应对象
+        @param r:接口响应对象
         """
         form = ''
         ss = ''
@@ -169,10 +169,10 @@ class Write(Format, Array):
     def analyFunc(self, fileRes, row, sheetName, sheet):
         """
         解析JSON
-        :param fileRes:用例结果文件
-        :param row:行号
-        :param sheetName:页签名
-        :param sheet:用例文件
+        @param fileRes:用例结果文件
+        @param row:行号
+        @param sheetName:页签名
+        @param sheet:用例文件
         """
 
         # JSON解析中不对异常情况进行处理，如有异常直接解析失败
@@ -194,32 +194,32 @@ class Write(Format, Array):
             self.consoleFunc('red', '解析失败.')
         self.setFlag(sheetName, row + 1, className, '解析结束')
 
-    def setSkip(self, sheet, row, bookRes, sheetRes, fileRes, msg, currentItera, Iteration, conn):
+    def setSkip(self, sheet, row, bookRes, sheetRes, fileRes, msg, currentIte, iteration, conn):
         """
         如果数据合法性校验不通过则调用此方法
-        :param sheet:用例文件
-        :param row:行号
-        :param bookRes:用例结果文件
-        :param sheetRes:用例结果文件
-        :param fileRes:用例结果文件
-        :param msg: 接口返回的异常信息
-        :param Iteration:迭代次数
-        :param currentItera:第n次迭代，从0计数
-        :param conn:数据库连接对象
+        @param sheet:用例文件
+        @param row:行号
+        @param bookRes:用例结果文件
+        @param sheetRes:用例结果文件
+        @param fileRes:用例结果文件
+        @param msg: 接口返回的异常信息
+        @param iteration:迭代次数
+        @param currentIte:第n次迭代，从0计数
+        @param conn:数据库连接对象
         """
         skipDict = []
         blue = self.setCellStyle(7)
         if '迭代异常' in str(msg):
             self.consoleFunc('red', '迭代次数只能为空或非负整数')
             self.status3 = self.status3 + 1
-            iteraValue = self.getValue(fileRes, sheet, row, self.IterationCol)
-            skipDict.append(f"迭代次数异常:{iteraValue}")
+            ite = self.getValue(fileRes, sheet, row, self.IterationCol)
+            skipDict.append(f"迭代次数异常:{ite}")
             # 标识结果为：skip，并设背景为蓝色
             if fileRes.endswith('xls'):
-                sheetRes.write(row, self.IterationCol, iteraValue, blue)
+                sheetRes.write(row, self.IterationCol, ite, blue)
                 sheetRes.write(row, self.statusCol, 'skip', blue)
             elif fileRes.endswith('xlsx'):
-                self.setValueColor(sheetRes, row + 1, self.IterationCol, iteraValue, "blue")
+                self.setValueColor(sheetRes, row + 1, self.IterationCol, ite, "blue")
                 self.setValueColor(sheetRes, row + 1, self.statusCol, 'skip', "blue")
         else:
             if '数据库异常' in str(msg):
@@ -252,7 +252,7 @@ class Write(Format, Array):
                     skipDict.append(exceValue)
                     self.getToLog(exceValue)
                 self.consoleFunc('red', str(msg))
-            if currentItera == Iteration - 1:
+            if currentIte == iteration - 1:
                 self.status3 = self.status3 + 1
             # 标识结果为：skip，并设背景为蓝色
             if fileRes.endswith('xls'):
@@ -275,25 +275,25 @@ class Write(Format, Array):
         return skipDict
 
     def setResult(self, row, bookRes, sheetRes, fileRes, checkRes, check, result, initRes, r, duration, res,
-                  resHeader, statusCode, expression, currentItera, Iteration):
+                  resHeader, statusCode, expression, currentIte, iteration):
         """
         数据合法性校验通过后调用此方法，校验各字段的值是否正确
-        :param Iteration:
-        :param currentItera:
-        :param expression:
-        :param statusCode:
-        :param res:
-        :param resHeader:
-        :param row:行号
-        :param bookRes:用例结果文件
-        :param sheetRes:用例结果文件
-        :param fileRes:用例结果文件
-        :param checkRes:校验字段结果数组+文件数组
-        :param check: 校验字段数组－－原值
-        :param result: 预期结果值数组
-        :param initRes: 预期结果数组－－原值
-        :param r:接口响应对象
-        :param duration:接口响应时间
+        @param iteration:
+        @param currentIte:
+        @param expression:
+        @param statusCode:
+        @param res:
+        @param resHeader:
+        @param row:行号
+        @param bookRes:用例结果文件
+        @param sheetRes:用例结果文件
+        @param fileRes:用例结果文件
+        @param checkRes:校验字段结果数组+文件数组
+        @param check: 校验字段数组－－原值
+        @param result: 预期结果值数组
+        @param initRes: 预期结果数组－－原值
+        @param r:接口响应对象
+        @param duration:接口响应时间
         """
         resultDict = []
         red = self.setCellStyle(2)
@@ -385,7 +385,7 @@ class Write(Format, Array):
                 self.consoleFunc('red', f"表达式断言失败:{expression[i]}")
                 resultDict.append(f"表达式断言失败:{expression[i]}")
                 status = 1
-        if currentItera == Iteration - 1:
+        if currentIte == iteration - 1:
             if status == 1:
                 self.status2 = self.status2 + 1
             else:
@@ -396,11 +396,11 @@ class Write(Format, Array):
     def setValueColor(self, sheetRes, row, column, value, color):
         """
         写入值并设置背景色
-        :param sheetRes:
-        :param row:行号
-        :param column:列号
-        :param value:写入单元格的值
-        :param color:单元格背景色
+        @param sheetRes:
+        @param row:行号
+        @param column:列号
+        @param value:写入单元格的值
+        @param color:单元格背景色
         """
         sheetRes.cell(row=row, column=column, value=value)
         color_fill = PatternFill("solid", fgColor=color)
@@ -409,15 +409,15 @@ class Write(Format, Array):
     def run(self, model, n, sheetName, sheet, nrows, bookRes, sheetRes, fileRes, allRows):
         """
         执行－－单行执行或全量执行（无参数）
-        :param model:模式(普通,简洁)
-        :param n:行号
-        :param sheetName:页签名
-        :param sheet:用例文件
-        :param nrows:行数
-        :param bookRes:用例结果文件
-        :param sheetRes: 用例结果文件
-        :param fileRes:用例结果文件
-        :param allRows:全部用例数
+        @param model:模式(普通,简洁)
+        @param n:行号
+        @param sheetName:页签名
+        @param sheet:用例文件
+        @param nrows:行数
+        @param bookRes:用例结果文件
+        @param sheetRes: 用例结果文件
+        @param fileRes:用例结果文件
+        @param allRows:全部用例数
         """
         testResult = []
         dict = {}
