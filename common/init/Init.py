@@ -1,5 +1,3 @@
-import traceback
-
 from common.init.InitConfig import InitConfig
 from common.init.InitExcel import InitExcel
 
@@ -9,25 +7,48 @@ from common.init.InitExcel import InitExcel
 
 
 class Init(InitConfig, InitExcel):
-    column = ''
-    # 各关键字的列号在很多地方会用到
-    nameCol = urlCol = methodCol = paramCol = fileCol = headerCol = part101Col = part201Col = part301Col = section101Col = section201Col = section301Col = resTextCol = resHeaderCol = statusCodeCol = expressionCol = statusCol = timeCol = init001Col = restore001Col = dyparam001Col = key001Col = value001Col = headerManagerCol = DBCol = IterationCol = ''
-    ncols = ''
 
     def __init__(self):
         self.fileData = None
+        self.ncols = None
+        self.column = None
+        self.nameCol = None
+        self.urlCol = None
+        self.methodCol = None
+        self.paramCol = None
+        self.fileCol = None
+        self.headerCol = None
+        self.part101Col = None
+        self.part201Col = None
+        self.part301Col = None
+        self.section101Col = None
+        self.section201Col = None
+        self.section301Col = None
+        self.resTextCol = None
+        self.resHeaderCol = None
+        self.statusCodeCol = None
+        self.expressCol = None
+        self.statusCol = None
+        self.timeCol = None
+        self.init001Col = None
+        self.restore001Col = None
+        self.dyparam001Col = None
+        self.key001Col = None
+        self.value001Col = None
+        self.headerManagerCol = None
+        self.DBCol = None
+        self.iterationCol = None
 
     def initFile(self, date, path, file, sheetName):
         """
         初始化用例文件和配置文件
-        :param date:
-        :param path:
-        :param file:
-        :param sheetName:
+        @param date: 日期
+        @param path: 路径
+        @param file: 文件
+        @param sheetName: 页签名
         """
         self.fileData = self.initConfig(path)
-        book = self.getBook(path, file)
-        sheet, nrows, self.ncols = self.getSheet(date, path, sheetName, file, book)
+        sheet, nrows, self.ncols = InitExcel.getSheet(date, path, sheetName, file)
         self.column = self.getColumn(file, sheet)
         self.nameCol = self.column[0]
         self.urlCol = self.column[1]
@@ -44,7 +65,7 @@ class Init(InitConfig, InitExcel):
         self.resTextCol = self.column[12]
         self.resHeaderCol = self.column[13]
         self.statusCodeCol = self.column[14]
-        self.expressionCol = self.column[15]
+        self.expressCol = self.column[15]
         self.statusCol = self.column[16]
         self.timeCol = self.column[17]
         self.init001Col = self.column[18]
@@ -54,5 +75,5 @@ class Init(InitConfig, InitExcel):
         self.value001Col = self.column[22]
         self.headerManagerCol = self.column[23]
         self.DBCol = self.column[24]
-        self.IterationCol = self.column[25]
+        self.iterationCol = self.column[25]
         return sheet, nrows
