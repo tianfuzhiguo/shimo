@@ -6,7 +6,7 @@ from __future__ import print_function
 '''
 
 
-class Analy():
+class Analy:
     def generator(self, indict, pre=None):
         pre = pre[:] if pre else []
         if isinstance(indict, dict):
@@ -23,10 +23,10 @@ class Analy():
                     else:
                         for v in value:
                             if isinstance(v, dict):
-                                for d in self.generator(v, pre + ["['" + key + "']" + str([value.index(v)])]):
+                                for d in self.generator(v, pre + ["['" + key + "']" + f'{[value.index(v)]}']):
                                     yield d
                             else:
-                                yield pre + ["['" + key + "']" + str([value.index(v)]), v]
+                                yield pre + ["['" + key + "']" + f'{[value.index(v)]}', v]
 
                 elif isinstance(value, tuple):
                     if len(value) == 0:
@@ -39,14 +39,14 @@ class Analy():
                     yield pre + ["['" + key + "']", value]
         elif isinstance(indict, list):
             if len(indict) == 0:
-                yield pre + [str([0]), '[]']
+                yield pre + [f'{[0]}', '[]']
             else:
                 for v in indict:
                     if isinstance(v, dict):
-                        for d in self.generator(v, pre + [str([indict.index(v)])]):
+                        for d in self.generator(v, pre + [f'{[indict.index(v)]}']):
                             yield d
                     else:
-                        yield pre + [str([indict.index(v)]), v]
+                        yield pre + [f'{[indict.index(v)]}', v]
         else:
             yield indict
 

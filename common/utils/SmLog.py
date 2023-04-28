@@ -1,28 +1,24 @@
-import logging, os
+import logging
+import os
 
 '''
 @author: dujianxiao
 '''
 
-class SmLog:
 
-    def initLog(self, path):
-        global logger
-        filename = f'{path}/result/info.log'
+class SmLog:
+    @staticmethod
+    def initLog(path):
+        logger = None
         try:
+            filename = f'{path}/result/info.log'
             isExists = os.path.exists(f'{path}/result')
+            if os.path.exists(filename):
+                os.remove(filename)
             if not isExists:
                 os.makedirs(f'{path}/result')
-            filename = f'{path}/result/info.log'
-            # 每次运行删除之前的日志，
-            os.remove(filename)
-        except:
-            pass
-        try:
-            if logger is None:
-                pass
-        except:
-            logger = None
+        except Exception as e:
+            print(e)
         if logger is None:
             logger = logging.getLogger()
         else:
@@ -34,8 +30,12 @@ class SmLog:
         fh.setFormatter(formatter)
         logger.addHandler(fh)
 
-    def getToLog(self, info):
+    @staticmethod
+    def getToLog(info):
+        info = str(info)
         logging.debug(info)
 
-    def getError(self, info):
+    @staticmethod
+    def getError(info):
+        info = str(info)
         logging.error(info)

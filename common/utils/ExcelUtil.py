@@ -1,5 +1,6 @@
 import openpyxl
 import xlrd
+from openpyxl.styles import PatternFill
 from xlwt import Pattern
 from xlwt import XFStyle
 
@@ -11,10 +12,11 @@ Created on 2022年1月6日
 
 class ExcelUtil:
 
-    def readExcel(self, file):
+    @staticmethod
+    def readExcel(file):
         """
         读取用例文件,支持.xls和.xlsx格式
-        :param file:用例文件
+        @param file: 用例文件
         """
         book = ''
         if file.endswith('xls'):
@@ -23,13 +25,14 @@ class ExcelUtil:
             book = openpyxl.load_workbook(file)
         return book
 
-    def getValue(self, file, sheet, row, columnNum):
+    @staticmethod
+    def getValue(file, sheet, row, columnNum):
         """
         获取某行某列的值
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param columnNum:列号
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param columnNum: 列号
         """
         if file.endswith('xls'):
             ctype = sheet.cell(row, columnNum).ctype  # 表格的数据类型
@@ -47,54 +50,50 @@ class ExcelUtil:
     def findStr(self, file, sheet, field):
         """
         用于查找特定字符串所在的列号
-        :param file:用例文件
-        :param sheet:
-        :param field:关键字
+        @param file: 用例文件
+        @param sheet: 页签
+        @param field: 关键字
         """
-        try:
+        for i in range(1, self.ncols):
             if file.endswith('xls'):
-                for i in range(1, self.ncols):
-                    re = sheet.cell(1, i).value
-                    if re == field:
-                        return i
+                re = sheet.cell(1, i).value
             elif file.endswith('xlsx'):
-                for i in range(1, self.ncols):
-                    re = sheet.cell(row=2, column=i).value
-                    if re == field:
-                        return i
-        except Exception as e:
-            print(e)
-            return '未查找到字符串：' + field
+                re = sheet.cell(row=2, column=i).value
+            if re == field:
+                return i
 
-    def getSheetNames(self, file):
+    @staticmethod
+    def getSheetNames(file):
         """
         获取用例文件中的全部页签名称
-        :param file:用例文件
+        @param file: 用例文件
         """
         sheetNames = ''
-        book = self.readExcel(file)
+        book = ExcelUtil.readExcel(file)
         if file.endswith('xls'):
             sheetNames = book.sheet_names()
         elif file.endswith('xlsx'):
             sheetNames = book.get_sheet_names()
         return sheetNames
 
-    def filterArr(self, arr, word):
+    @staticmethod
+    def filterList(dataList: list, word: str):
         """
-        去除Arr中含有word的字符串
-        :param arr:数组
-        :param word:关键字
+        过滤数组中含有指定字符串的元素
+        @param dataList: 数组
+        @param word: 关键字
         """
-        return [item for item in arr if str(word) not in str(item)]
+        return [item for item in dataList if f'{word}' not in f'{item}']
 
-    def getArray(self, file, sheet, row, start, end):
+    @staticmethod
+    def getList(file, sheet, row, start, end):
         """
         获取某行start到end之间的数组－－原值
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param start:
-        :param end:
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param start: 索引开始
+        @param end: 索引结束
         """
         result = []
         if file.endswith('xls'):
@@ -103,27 +102,17 @@ class ExcelUtil:
                 cell = sheet.cell_value(row, column)
                 if ctype == 2 and cell % 1 == 0:  # 如果是整形
                     cell = int(cell)
-                result.append(str(cell))
+                result.append(f'{cell}')
         elif file.endswith('xlsx'):
             for column in range(start, end):
                 value = sheet.cell(row=row + 1, column=column).value
                 if value is None:
                     value = ''
-                result.append(str(value))
+                result.append(f'{value}')
         return result
 
-    def getInitArray(self, file, sheet, row, field, msg):
-        """
-        取异常数据中的真实值
-        :param file:用例文件
-        :param sheet:
-        :param row:行号
-        :param field:关键字
-        :param msg:异常数组
-        """
-        return [self.getValue(file, sheet, row, int(item)) for item in msg[1:]] if field in str(msg) else ''
-
-    def setCellStyle(self, n):
+    @staticmethod
+    def setCell(n):
         """
         设置单元格格式
         """
@@ -133,3 +122,17 @@ class ExcelUtil:
         style = XFStyle()
         style.pattern = pattern
         return style
+
+    @staticmethod
+    def setColor(sheetRes, row, column, value, color):
+        """
+        写入值并设置背景色
+        @param sheetRes: 结果页签
+        @param row: 行号
+        @param column: 列号
+        @param value: 写入单元格的值
+        @param color: 单元格背景色
+        """
+        sheetRes.cell(row=row, column=column, value=value)
+        color_fill = PatternFill("solid", fgColor=color)
+        sheetRes.cell(row, column).fill = color_fill

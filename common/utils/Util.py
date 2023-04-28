@@ -2,6 +2,7 @@ import cx_Oracle
 import pymssql
 import pymysql
 from common.init.Init import Init
+from common.utils.ExcelUtil import ExcelUtil
 from common.utils.SmLog import SmLog
 
 '''
@@ -14,11 +15,11 @@ class Util(SmLog, Init):
     def getConn(self, file, sheet, row):
         """
         连接数据库
-        @param file:用例文件
-        @param sheet:
-        @param row:行号
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
         """
-        DB = self.getValue(file, sheet, row, self.DBCol)
+        DB = ExcelUtil.getValue(file, sheet, row, self.DBCol)
         if DB == '':
             return [[]]
         else:
@@ -27,40 +28,42 @@ class Util(SmLog, Init):
                 conn = eval(DB)
             except Exception as e:
                 print(e)
-                self.getError(str(e))
-                return [['数据库异常', self.DBCol], [str(e)]]
+                self.getError(e)
+                return [['数据库异常', self.DBCol], [f'{e}']]
             return [[conn]]
 
     def DBExists(self, file, sheet, row, conn):
         """
         有SQL则数据库不允许为空
         """
-        allSql = self.getArray(file, sheet, row, self.part301Col, self.section101Col) + \
-                 self.getArray(file, sheet, row, self.section201Col, self.section301Col) + \
-                 self.getArray(file, sheet, row, self.init001Col, self.key001Col)
+        allSql = ExcelUtil.getList(file, sheet, row, self.part301Col, self.section101Col) + \
+                 ExcelUtil.getList(file, sheet, row, self.section201Col, self.section301Col) + \
+                 ExcelUtil.getList(file, sheet, row, self.init001Col, self.key001Col)
         # 如果sql不全为空而数据库连接为空，则返回数据库异常，否则返回空数组
         return [['数据库异常', self.DBCol], []] if ''.join(allSql) != '' and conn == [[]] else []
 
-    def getSqlResultArray(self, file, sheet, row, conn, start, end):
+    @staticmethod
+    def getSqlResult(file, sheet, row, conn, start, end):
         """
         获取sql结果数组
-        @param file:用例文件
-        @param sheet:
-        @param row:行号
-        @param conn:数据库连接对象
-        @param start:
-        @param end:
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param conn: 数据库连接对象
+        @param start: 索引开始
+        @param end: 索引结束
+        @return List: sql结果
         """
         data = []
-        sqlArray = self.getArray(file, sheet, row, start, end)
+        sqlList = ExcelUtil.getList(file, sheet, row, start, end)
         column = start
         # 在此之前已经校验过sql不全为空而数据库为空的情况
         # 所以如果此时数据库为空，说明sql全为空
         if conn == [[]]:
-            return sqlArray
+            return sqlList
         else:
             cursor = conn[0][0].cursor()
-            for item in sqlArray:
+            for item in sqlList:
                 if item == '':
                     data.append('')
                 else:
@@ -75,40 +78,40 @@ class Util(SmLog, Init):
     def sqlExcept(self, file, sheet, row, conn):
         """
         此方法仅用作验证SQL句是否正确
-        @param file:用例文件
-        @param sheet:
-        @param row:行号
-        @param conn:数据库连接对象
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param conn: 数据库连接对象
         """
         conn = self.getConn(file, sheet, row)
         msg = ['数据库异常']
-        SqlMsg = []
-        sqlArray = (self.getArray(file, sheet, row, self.part301Col, self.section101Col) +
-                    self.getArray(file, sheet, row, self.section201Col, self.section301Col) +
-                    self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col))
-        sqlArray = [self.repRel(item) for item in sqlArray]
-        sqlArray = [self.repVar(item) for item in sqlArray]
+        sqlMsg = []
+        sqlList = (ExcelUtil.getList(file, sheet, row, self.part301Col, self.section101Col) +
+                   ExcelUtil.getList(file, sheet, row, self.section201Col, self.section301Col) +
+                   ExcelUtil.getList(file, sheet, row, self.dyparam001Col, self.key001Col))
+        sqlList = [self.repRel(item) for item in sqlList]
+        sqlList = [self.repVar(item) for item in sqlList]
         if conn == [[]]:
             return []
         else:
             column1 = self.part301Col
             cursor = conn[0][0].cursor()
-            for item in sqlArray:
+            for item in sqlList:
                 if item != '':
                     try:
                         # 这三部分的SQL只能是查询语句
-                        if not (str(item).lower()).replace(' ', '').startswith('select'):
-                            self.getToLog('part301Col,section201Col,dyparam001Col这三部分只能是select语句:' + str(item))
+                        if not (f'{item}'.lower()).replace(' ', '').startswith('select'):
+                            self.getToLog('part301Col,section201Col,dyparam001Col这三部分只能是select语句:' + f'{item}')
                             msg.append(column1)
-                            SqlMsg.append(str(item))
+                            sqlMsg.append(f'{item}')
                         else:
                             cursor.execute(item)
                     except Exception as e:
                         print(e)
                         msg.append(column1)
                         self.getToLog(item)
-                        self.getError(str(e))
-                        SqlMsg.append(str(e))
+                        self.getError(e)
+                        sqlMsg.append(f'{e}')
                 if column1 == self.section101Col - 1:
                     column1 = self.section201Col - 1
                 if column1 == self.section301Col - 1:
@@ -116,27 +119,27 @@ class Util(SmLog, Init):
                 column1 = column1 + 1
             cursor.close()
             conn[0][0].close()
-            return [msg, SqlMsg] if len(msg) > 1 else []
+            return [msg, sqlMsg] if len(msg) > 1 else []
 
     def initData(self, file, sheet, row, conn):
         """
         数据初始化
-        @param file:用例文件
-        @param sheet:
-        @param row:行号
-        @param conn:数据库连接对象
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param conn: 数据库连接对象
         """
         msg = ['数据库异常']
-        SqlMsg = []
+        sqlMsg = []
         column1 = self.init001Col
-        sqlArray = self.getArray(file, sheet, row, self.init001Col, self.restore001Col)
-        sqlArray = [self.repRel(item) for item in sqlArray]
-        sqlArray = [self.repVar(item) for item in sqlArray]
+        sqlList = ExcelUtil.getList(file, sheet, row, self.init001Col, self.restore001Col)
+        sqlList = [self.repRel(item) for item in sqlList]
+        sqlList = [self.repVar(item) for item in sqlList]
         if conn == [[]]:
             return []
         else:
             cursor = conn[0][0].cursor()
-            for item in sqlArray:
+            for item in sqlList:
                 if item != '':
                     try:
                         item = self.rep(file, sheet, row, conn, item)
@@ -145,33 +148,33 @@ class Util(SmLog, Init):
                         self.getToLog(f'数据初始化：{item}')
                     except Exception as e:
                         print(e)
-                        msg.append(str(column1))
+                        msg.append(f'{column1}')
                         self.getToLog(item)
-                        self.getError(str(e))
-                        SqlMsg.append(str(e))
+                        self.getError(e)
+                        sqlMsg.append(f'{e}')
                 column1 = column1 + 1
             cursor.close()
-            return [msg, SqlMsg] if len(msg) > 1 else []
+            return [msg, sqlMsg] if len(msg) > 1 else []
 
     def restore(self, file, sheet, row, conn):
         """
         数据恢复
-        @param file:用例文件
-        @param sheet:
+        @param file: 用例文件
+        @param sheet: 页签
         @param row: 行号
-        @param conn:数据库连接对象
+        @param conn: 数据库连接对象
         """
         msg = ['数据库异常']
-        SqlMsg = []
+        sqlMsg = []
         column1 = self.restore001Col
-        sqlArray = self.getArray(file, sheet, row, self.restore001Col, self.dyparam001Col)
-        sqlArray = [self.repRel(item) for item in sqlArray]
-        sqlArray = [self.repVar(item) for item in sqlArray]
+        sqlList = ExcelUtil.getList(file, sheet, row, self.restore001Col, self.dyparam001Col)
+        sqlList = [self.repRel(item) for item in sqlList]
+        sqlList = [self.repVar(item) for item in sqlList]
         if conn == [[]]:
             return []
         else:
             cursor = conn[0][0].cursor()
-            for item in sqlArray:
+            for item in sqlList:
                 if item != '':
                     try:
                         item = self.rep(file, sheet, row, conn, item)
@@ -180,30 +183,30 @@ class Util(SmLog, Init):
                         self.getToLog(f'数据恢复：{item}')
                     except Exception as e:
                         print(e)
-                        msg.append(str(column1))
-                        self.getError(str(e))
-                        SqlMsg.append(str(e))
+                        msg.append(f'{column1}')
+                        self.getError(e)
+                        sqlMsg.append(f'{e}')
                 column1 = column1 + 1
             cursor.close()
-            return [msg, SqlMsg] if len(msg) > 1 else []
+            return [msg, sqlMsg] if len(msg) > 1 else []
 
     def dyparam(self, file, sheet, row, conn):
         """
         动态化参数-数据库查询结果作为参数供同一行的其他地方调用
-        @param file:用例文件
-        @param sheet:
+        @param file: 用例文件
+        @param sheet: 页签
         @param row: 行号
         @param conn: 数据库连接对象
         """
         data = []
-        sqlArray = self.getArray(file, sheet, row, self.dyparam001Col, self.key001Col)
-        sqlArray = [self.repRel(item) for item in sqlArray]
-        sqlArray = [self.repVar(item) for item in sqlArray]
+        sqlList = ExcelUtil.getList(file, sheet, row, self.dyparam001Col, self.key001Col)
+        sqlList = [self.repRel(item) for item in sqlList]
+        sqlList = [self.repVar(item) for item in sqlList]
         if conn == [[]]:
             return []
         else:
             cursor = conn[0][0].cursor()
-            for item in sqlArray:
+            for item in sqlList:
                 if item == '':
                     data.append('')
                 else:
@@ -214,60 +217,60 @@ class Util(SmLog, Init):
             cursor.close()
             return data
 
-    def repVar(self, param):
+    def repVar(self, string):
         """
-        用户变量替换
-        @param param:需要替换的值
+        替换字符串中的用户变量为真实值
+        @param string: 需要替换的字符串
         """
-        param = str(param)
+        string = f'{string}'
         for i in range(len(self.fileData)):
-            if f'${{{self.fileData[i][0]}}}' in param:
-                param = param.replace(f'${{{self.fileData[i][0]}}}', str(self.fileData[i][1]))
-        return param
+            if f'${{{self.fileData[i][0]}}}' in string:
+                string = string.replace(f'${{{self.fileData[i][0]}}}', f'{self.fileData[i][1]}')
+        return string
 
-    def repRel(self, param):
+    def repRel(self, string):
         """
-        接口变量替换
-        @param param:需要替换的值
+        替换字符串中的接口变量为真实值
+        @param string: 需要替换的字符串
         """
-        param = str(param)
-        for k, v in self.interData.items():
-            if f"${{{k}}}" in str(param):
-                param = param.replace(f"${{{k}}}", str(v))
-        return param
+        string = f'{string}'
+        for key, value in self.interData.items():
+            if f"${{{key}}}" in f'{string}':
+                string = string.replace(f"${{{key}}}", f'{value}')
+        return string
 
-    def rep(self, file, sheet, row, conn, param):
+    def rep(self, file, sheet, row, conn, string):
         """
-        动态参数替换
-        @param file:用例文件
-        @param sheet:
+        替换字符串中的动态参数为真实值
+        @param file: 用例文件
+        @param sheet: 页签
         @param row: 行号
         @param conn: 数据库连接对象
-        @param param: 需要替换的值
+        @param string: 需要替换的字符串
         """
-        dypArr = []
+        dypList = []
         dypar = self.dyparam(file, sheet, row, conn)
         if dypar is None:
-            return param
+            return string
         else:
             for i in range(1, len(dypar) + 1):
-                dypArr.append('dyparam' + str(i).zfill(3))
+                dypList.append('dyparam' + f'{i}'.zfill(3))
             for i in range(len(dypar)):
-                if f'${{{dypArr[i]}}}' in param:
-                    param = param.replace(f'${{{dypArr[i]}}}', str(dypar[i]))
-        return param
+                if f'${{{dypList[i]}}}' in string:
+                    string = string.replace(f'${{{dypList[i]}}}', f'{dypar[i]}')
+        return string
 
-    def repAll(self, param, file, sheet, row, conn):
+    def repAll(self, string, file, sheet, row, conn):
         """
-        三者替换，替换用户变量、动态参数、接口变量
-        @param param:
-        @param file:用例文件
-        @param sheet:
+        替换字符串中的用户变量、动态参数、接口变量为真实值
+        @param string:
+        @param file: 用例文件
+        @param sheet: 页签
         @param row: 行号
         @param conn: 数据库连接对象
         """
-        param = str(param)
-        param = self.repVar(param)
-        param = self.rep(file, sheet, row, conn, param)
-        param = self.repRel(param)
-        return param
+        string = f'{string}'
+        string = self.repVar(string)
+        string = self.rep(file, sheet, row, conn, string)
+        string = self.repRel(string)
+        return string
