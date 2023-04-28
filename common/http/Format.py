@@ -14,14 +14,14 @@ class Format(Http, Analy):
     def checkFormat(self, file, sheet, row, conn):
         """
         合法性校验
-        :param file: 用例文件
-        :param sheet:
-        :param row:行号
-        :param conn:数据库连接对象
-        return: 返回3个值，分别为：http响应、响应时间、异常信息
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param conn: 数据库连接对象
+        @return: 返回3个值，分别为：http响应、响应时间、异常信息
         """
         # 数据库Ip、用户名、密码错误等引起的异常
-        if '数据库异常' in str(conn):
+        if '数据库异常' in f'{conn}':
             return '', '---', conn
         # 有SQL无数据库连接引起的异常
         DBMsg = self.DBExists(file, sheet, row, conn)
@@ -29,7 +29,7 @@ class Format(Http, Analy):
             return '', '---', DBMsg
         # 查询语句错误引起的异常
         DBMsg = self.sqlExcept(file, sheet, row, conn)
-        if '数据库异常' in str(DBMsg):
+        if '数据库异常' in f'{DBMsg}':
             return '', '---', DBMsg
         initMsg = self.initData(file, sheet, row, conn)
         # 数据库初始化语句异常
@@ -59,10 +59,10 @@ class Format(Http, Analy):
     def jsonFormat(self, file, sheet, row, conn):
         """
         把接口返回对象解析成path+value的形式
-        :param file: 用例文件
-        :param sheet:
-        :param row:行号
-        :param conn:数据库连接对象
+        @param file: 用例文件
+        @param sheet: 页签
+        @param row: 行号
+        @param conn: 数据库连接对象
         """
         try:
             self.initData(file, sheet, row, conn)
@@ -70,9 +70,9 @@ class Format(Http, Analy):
             self.restore(file, sheet, row, conn)
             # 处理字符集
             encoding = chardet.detect(r.content).get('encoding')
-            if '8859' in str(encoding):
+            if '8859' in f'{encoding}':
                 r.encoding = 'utf-8'
-            elif '2312' in str(encoding) or 'gbk' in str(encoding).lower() or 'gb18130' in str(encoding).lower():
+            elif '2312' in f'{encoding}' or 'gbk' in f'{encoding}'.lower() or 'gb18130' in f'{encoding}'.lower():
                 r.encoding = 'gbk'
             else:
                 r.encoding = 'utf-8'
@@ -80,4 +80,4 @@ class Format(Http, Analy):
             return s1, s2
         except Exception as e:
             self.getError(msg)
-            return e, '解析失败'
+            return f'{e}', '解析失败'
