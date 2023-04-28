@@ -1,4 +1,3 @@
-import os
 import openpyxl
 import shutil
 import xlrd
@@ -16,24 +15,22 @@ class Report(ExcelUtil):
     def createReport(self, reportDate, path, file, sheetNames):
         """
         生成excel结果文件
-        :param reportDate:
-        :param path:文件路径
-        :param file:用例文件
-        :param sheetNames:用例文件中的全部页签名
+        @param reportDate: 报告日期
+        @param path: 文件路径
+        @param file: 用例文件
+        @param sheetNames: 用例文件中的全部页签名
         """
         try:
             sheetRes = []
-            fileSrc = str(path).replace('/', '\\') + '\\'
+            fileSrc = f'{path}'.replace('/', '\\') + '\\'
             fileRes = f'{fileSrc}result\\{file[:-4]}-{reportDate}-report.xls'
-            book = self.readExcel(os.path.join(path, file))
             if file.endswith('xls'):
                 shutil.copyfile(fileSrc + file, fileRes)
-                bookRes = copy(book)
                 book = xlrd.open_workbook(fileRes, formatting_info=True)
                 bookRes = copy(book)
                 [sheetRes.append(bookRes.get_sheet(item)) for item in sheetNames]
             elif file.endswith('xlsx'):
-                fileRes = fileRes + 'x'
+                fileRes = f'{fileRes}x'
                 shutil.copyfile(fileSrc + file, fileRes)
                 book = openpyxl.load_workbook(fileRes)
                 bookRes = book
@@ -43,4 +40,4 @@ class Report(ExcelUtil):
             print(e)
             fileCheck = f"文件：{fileRes} 正在被其他程序使用"
             print(fileCheck)
-            self.consoleFunc('red', str(fileCheck))
+            self.setFonts('red', fileCheck)
