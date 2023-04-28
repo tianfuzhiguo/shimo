@@ -4,23 +4,21 @@ import os
 import sys
 import time
 import traceback
-
 from PyQt5 import QtGui, QtCore
 from PyQt5.QtCore import QThread
 from PyQt5.QtWidgets import QMainWindow, QApplication, QFileDialog, QListView
-
 from common.excel.Report import Report
 from common.excel.Template import Template
 from common.excel.Write import Write
 from common.ui.ExampleBox import ExampleBox
 from common.ui.MainWindow import Ui_MainWindow
+from common.utils.ExcelUtil import ExcelUtil
 
 '''
 #主类
 #author: dujianxiao
 '''
 date = time.strftime("%Y%m%d")
-sheetNames = fname = bookRes = sheetRes = fileRes = path = file = sheetName = sheet = nrows = ""
 
 
 class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
@@ -31,6 +29,8 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
 
     def __init__(self):
         super().__init__()
+        self.debug_thread = None
+        self.analy_thread = None
         self.setupUi(self)
         self.example = ExampleBox()
         self.example.setMinimumSize(QtCore.QSize(0, 25))
@@ -44,7 +44,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         self.refresh.clicked.connect(self.reloadSheet)
         self.example.popupAboutToBeShown.connect(self.reload)
         self.dtailReport.clicked.connect(self.openExcelReport)
-        self.html.clicked.connect(self.openHtmlReport)
+        self.html.clicked.connect(self.openHtml)
         self.dtailLog.clicked.connect(self.openLog)
         self.debug.clicked.connect(self.start)
         self.analyJSON.clicked.connect(self.analyFunction)
@@ -81,7 +81,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             path = path.replace('\\', '/')
             fileData = self.initConfig(path)
             self.initLog(path)
-            file = str(fileData[-1][1])  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
+            file = f'{fileData[-1][1]}'  # 需要在conf.ini最后一行写入用例文件的名称如jenkinsFile=ems.xls
             fname = f'{path}/{file}'
             sheetNames = self.getSheetNames(fname)
             self.fileName.setText(fname)
@@ -100,7 +100,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 self.initConfig(path)
                 self.initLog(path)
                 # 创建用例结果文件
-                sheetNames = self.getSheetNames(f'{path}/{file}')
+                sheetNames = ExcelUtil.getSheetNames(f'{path}/{file}')
                 bookRes, sheetRes, fileRes = self.createReport(date, path, file, sheetNames)
                 self.qSheetName.clear()
                 self.example.clear()
@@ -109,7 +109,7 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                     if i == 0:
                         self.qSheetName.addItem('全部')
                     else:
-                        self.qSheetName.addItem(str(sheetNames[i - 1]))
+                        self.qSheetName.addItem(f'{sheetNames[i - 1]}')
         except Exception as e:
             print(e)
             self.qSheetName.clear()
@@ -118,15 +118,11 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         点击文件名打开文件
         """
-        try:
-            fname = ex.fileName.text()
-            if fname in ['请选择文件', '']:
-                ex.console.clear()
-            else:
-                os.startfile(eval(f"r'{fname}'"))
-        except Exception as e:
-            print(e)
-            ex.console.clear()
+        fname = ex.fileName.text()
+        if fname in ['请选择文件', '']:
+            self.console.clear()
+        else:
+            os.startfile(eval(f"r'{fname}'"))
 
     def changeSheet(self):
         """
@@ -140,49 +136,49 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             sheetName = self.qSheetName.currentText()
             bookRes, sheetRes, fileRes = self.createReport(date, path, file, sheetNames)
             if (sheetName == '全部' and self.qSheetName.currentIndex() == 0) or sheetName == '':
+                allRows = 0
+                allRpt = ''
                 self.example.setCurrentText('')
                 for i in range(len(sheetNames)):
                     self.example.clear
                     self.example.items.clear()
                 self.example.loadItems([])
-                allRows = 0
-                allRpt = ''
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 for i in range(len(sheetNames)):
                     sheet, nrows = self.initFile(date, path, file, sheetNames[i])
-                    rpt = ex.verTemp(sheetNames[i], sheet, bookRes, sheetRes[i], fileRes)
-                    allRpt = allRpt + str(rpt)
+                    rpt = self.verTemp(sheetNames[i], sheet, bookRes, sheetRes[i], fileRes)
+                    allRpt = allRpt + f'{rpt}'
                     if rpt == '':
                         noRuns = 0
                         IterationCol = self.findStr(file, sheet, 'Iteration')
                         for i in range(3, nrows + 1):
-                            if str(self.getValue(file, sheet, i - 1, IterationCol)) == '0':
+                            if f'{ExcelUtil.getValue(file, sheet, i - 1, IterationCol)}' == '0':
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText(f'0/{allRows}')
+                    self.result.setText(f'0/{allRows}')
             else:
                 items = []
                 st = []
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 sheet, nrows = self.initFile(date, path, file, sheetName)
-                rpt = ex.verTemp(sheetName, sheet, bookRes, sheetRes[0], fileRes)
+                rpt = self.verTemp(sheetName, sheet, bookRes, sheetRes[0], fileRes)
                 noRuns = 0
                 if rpt == '':
                     for i in range(3, nrows + 1):
-                        st.append(f'{i} {self.getValue(file, sheet, i - 1, ex.nameCol)}')
-                        st.append(str(self.getValue(file, sheet, i - 1, ex.IterationCol)))
+                        st.append(f'{i} {ExcelUtil.getValue(file, sheet, i - 1, ex.nameCol)}')
+                        st.append(f'{ExcelUtil.getValue(file, sheet, i - 1, ex.iterationCol)}')
                         items.append(st)
                         st = []
                     self.example.loadItems(items)
                     IterationCol = self.findStr(file, sheet, 'Iteration')
                     for i in range(3, nrows + 1):
-                        if str(self.getValue(file, sheet, i - 1, IterationCol)).upper() == '0':
+                        if f'{ExcelUtil.getValue(file, sheet, i - 1, IterationCol)}'.upper() == '0':
                             noRuns = noRuns + 1
-                    ex.result.setText(f'0/{(nrows - 2 - noRuns)}')
+                    self.result.setText(f'0/{(nrows - 2 - noRuns)}')
                 else:
-                    ex.console.clear()
-                    ex.consoleFunc('red', str(rpt))
+                    self.console.clear()
+                    self.setFonts('red', rpt)
         except Exception as e:
             print(e)
 
@@ -202,13 +198,13 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                 pass
             else:
                 self.qSheetName.clear()
-                sheetNames = self.getSheetNames(f"{path}/{file}")
+                sheetNames = ExcelUtil.getSheetNames(f"{path}/{file}")
                 # 填充页签下拉列表
                 for i in range(len(sheetNames) + 1):
                     if i == 0:
                         self.qSheetName.addItem('全部')
                     else:
-                        self.qSheetName.addItem(str(sheetNames[i - 1]))
+                        self.qSheetName.addItem(f'{sheetNames[i - 1]}')
                 self.qSheetName.setCurrentIndex(0)
         except Exception as e:
             print(e)
@@ -219,37 +215,37 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         try:
             sheetName = self.qSheetName.currentText()
-            if (sheetName == '全部' and ex.qSheetName.currentIndex() == 0) or sheetName == '':
+            if (sheetName == '全部' and self.qSheetName.currentIndex() == 0) or sheetName == '':
+                allRows = 0
+                allRpt = ''
                 self.example.setCurrentText('')
                 for i in range(len(sheetNames)):
                     self.example.clear
                     self.example.items.clear()
-                allRows = 0
-                allRpt = ''
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 for i in range(len(sheetNames)):
                     sheet, nrows = self.initFile(date, path, file, sheetNames[i])
-                    rpt = ex.verTemp(sheetNames[i], sheet, bookRes, sheetRes[i], fileRes)
-                    allRpt = allRpt + str(rpt)
+                    rpt = self.verTemp(sheetNames[i], sheet, bookRes, sheetRes[i], fileRes)
+                    allRpt = allRpt + f'{rpt}'
                     if rpt == '':
                         noRuns = 0
                         IterationCol = self.findStr(file, sheet, 'Iteration')
                         for i in range(3, nrows + 1):
-                            if str(self.getValue(file, sheet, i - 1, IterationCol)).upper() == '0':
+                            if f'{ExcelUtil.getValue(file, sheet, i - 1, IterationCol)}'.upper() == '0':
                                 noRuns = noRuns + 1
                         allRows = allRows + nrows - 2 - noRuns
                 if allRpt == '':
-                    ex.result.setText(f'0/{allRows}')
+                    self.result.setText(f'0/{allRows}')
             else:
                 # 每次切换页签时都校验一遍模板，防止使用过程中对模板有改动
                 items = []
                 st = []
                 sheet, nrows = self.initFile(date, path, file, sheetName)
-                rpt = ex.verTemp(sheetName, sheet, bookRes, sheetRes, fileRes)
+                rpt = self.verTemp(sheetName, sheet, bookRes, sheetRes, fileRes)
                 # 模板校验通过
                 if rpt == '':
                     # 获取被选中的用例
-                    exa = str(ex.example.currentText())[1:-1].replace("'", '').split(",")
+                    exa = f'{self.example.currentText()}'[1:-1].replace("'", '').split(",")
                     for value in exa:
                         if value == '':
                             exa.remove(value)
@@ -259,11 +255,11 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                     noRuns = 0
                     IterationCol = self.findStr(file, sheet, 'Iteration')
                     for i in range(3, nrows + 1):
-                        if str(self.getValue(file, sheet, i - 1, IterationCol)).upper() == '0':
+                        if f'{ExcelUtil.getValue(file, sheet, i - 1, IterationCol)}'.upper() == '0':
                             noRuns = noRuns + 1
                     for i in range(3, nrows + 1):
-                        st.append(str(i) + ' ' + str(self.getValue(file, sheet, i - 1, ex.nameCol)))
-                        st.append(str(self.getValue(file, sheet, i - 1, ex.IterationCol)))
+                        st.append(f'{i} {ExcelUtil.getValue(file, sheet, i - 1, ex.nameCol)}')
+                        st.append(f'{ExcelUtil.getValue(file, sheet, i - 1, ex.iterationCol)}')
                         items.append(st)
                         st = []
                     self.example.loadItems(items)
@@ -274,10 +270,10 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
                                 self.example.qCheckBox[exa[i] - 2].setChecked(True)
                             except Exception as e:
                                 print(e)
-                    ex.result.setText(f"0/{nrows - 2 - noRuns}")
+                    self.result.setText(f"0/{nrows - 2 - noRuns}")
                 else:
-                    ex.console.clear()
-                    ex.consoleFunc('red', str(rpt))
+                    self.console.clear()
+                    self.setFonts('red', rpt)
         except Exception as e:
             print(e)
 
@@ -285,94 +281,66 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         """
         切换用例
         """
-        try:
-            exa = self.example.Selectlist()
-            ex.result.setText(f"0/{len(exa)}")
-        except Exception as e:
-            print(e)
+        exa = self.example.Selectlist()
+        self.result.setText(f"0/{len(exa)}")
 
     def openExcelReport(self):
         """
         打开excel报告
         """
-        try:
-            fname = ex.fileName.text()
-            if fname in ['请选择文件', '']:
-                ex.console.clear()
-            else:
-                reportName = file[:file.index('.xls')] + '-' + date + '-report.xls'
-                if file.endswith('xlsx'):
-                    reportName += 'x'
-                excel = f"r'{path}/result/{reportName}'"
-                os.startfile(eval(excel))
-        except Exception as e:
-            print(e)
-            ex.console.clear()
-            ex.consoleFunc('red', '打开报告失败')
+        fname = ex.fileName.text()
+        if fname in ['请选择文件', '']:
+            self.console.clear()
+        else:
+            reportName = file[:file.index('.xls')] + '-' + date + '-report.xls'
+            if file.endswith('xlsx'):
+                reportName += 'x'
+            excel = f"r'{path}/result/{reportName}'"
+            os.startfile(eval(excel))
 
-    def createHTMLReport(self, js):
+    def createHTML(self, js):
         """
         创建html测试报告
-        @param path:
-        @param file:
         @param js: json格式的测试结果
         """
-        try:
-            try:
-                html = self.resource_path("source/template")
-                f1 = open(html, "r", encoding="utf-8")
-                htmlData = f1.read()
-                html = htmlData.replace('${resultData}', str(js))
-                f1.close()
-                file_name = file[:file.index('.xls')]
-                html_file = f"{path}/result/{file_name}-{date}-report.html"
-                if os.path.exists(html_file):
-                    os.remove(html_file)
-                htmlReportName = f"{path}/result/{file_name}-{date}-report.html"
-                f2 = open(htmlReportName, 'w', encoding='utf-8')
-                f2.write(html)
-                f2.close()
-            except:
-                print(traceback.format_exc())
-            return htmlReportName
-        except Exception as e:
-            print(e)
+        html = self.resource_path("source/template")
+        with open(html, "r", encoding="utf-8") as f:
+            htmlData = f.read()
+            html = htmlData.replace('${resultData}', f'{js}')
+        file_name = file[:file.index('.xls')]
+        html_file = f"{path}/result/{file_name}-{date}-report.html"
+        if os.path.exists(html_file):
+            os.remove(html_file)
+        htmlReportName = f"{path}/result/{file_name}-{date}-report.html"
+        with open(htmlReportName, 'w', encoding='utf-8') as f:
+            f.write(html)
+        return htmlReportName
 
-    def openHtmlReport(self):
+    def openHtml(self):
         """
         打开html报告
         """
-        try:
-            fname = ex.fileName.text()
-            if fname in ['请选择文件', '']:
-                ex.console.clear()
-            else:
-                file_name = file[:file.index('.xls')]
-                reportName = f"{file_name}-{date}-report.html"
-                html_path = f"r'{path}/result/{reportName}'"
-                os.startfile(eval(html_path))
-        except Exception as e:
-            print(e)
-            ex.console.clear()
-            ex.consoleFunc('red', '打开报告失败')
+        fname = ex.fileName.text()
+        if fname in ['请选择文件', '']:
+            self.console.clear()
+        else:
+            file_name = file[:file.index('.xls')]
+            reportName = f"{file_name}-{date}-report.html"
+            html_path = f"r'{path}/result/{reportName}'"
+            os.startfile(eval(html_path))
 
     def openLog(self):
         """
         打开日志
         """
-        try:
-            fname = ex.fileName.text()
-            if fname in ['请选择文件', '']:
-                ex.console.clear()
-            else:
-                log_path = f"r'{path}/result/info.log'"
-                os.startfile(eval(log_path))
-        except Exception as e:
-            print(e)
-            ex.console.clear()
-            ex.consoleFunc('red', '打开日志失败')
+        fname = ex.fileName.text()
+        if fname in ['请选择文件', '']:
+            self.console.clear()
+        else:
+            log_path = f"r'{path}/result/info.log'"
+            os.startfile(eval(log_path))
 
-    def getPath(self, path: str):
+    def getPath(self, path):
         """
         获取文件路径
         """
@@ -391,13 +359,13 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         else:
             ss = self.analyJSON.text()
             if ss == '解  析':
-                ex.console.clear()
-                ex.analy_thread = analyFunctionClass()
-                ex.analy_thread.start()
-                ex.analyJSON.setText('停  止')
+                self.console.clear()
+                self.analy_thread = analyFunctionClass()
+                self.analy_thread.start()
+                self.analyJSON.setText('停  止')
             elif ss == '停  止':
-                ex.analyJSON.setText('解  析')
-                ex.analy_thread.terminate()
+                self.analyJSON.setText('解  析')
+                self.analy_thread.terminate()
                 self.buttonStatus(True)
 
     def start(self):
@@ -410,13 +378,13 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
         else:
             ss = self.debug.text()
             if ss == '开  始':
-                ex.console.clear()
-                ex.debug_thread = debugClass()
-                ex.debug_thread.start()
-                ex.debug.setText('停  止')
+                self.console.clear()
+                self.debug_thread = debugClass()
+                self.debug_thread.start()
+                self.debug.setText('停  止')
             elif ss == '停  止':
-                ex.debug.setText('开  始')
-                ex.debug_thread.terminate()
+                self.debug.setText('开  始')
+                self.debug_thread.terminate()
                 self.buttonStatus(True)
 
     def buttonStatus(self, flag):
@@ -453,7 +421,7 @@ class analyFunctionClass(QThread, DetailUI):
             ex.result.setText('0/0')
             exa = ex.example.currentText()
             if not exa:
-                ex.consoleFunc('red', '请选择接口')
+                ex.setFonts('red', '请选择接口')
             else:
                 exa = exa[1:-1].replace("'", '').split(',')
                 exa = [int(item) for item in exa]
@@ -504,11 +472,11 @@ class debugClass(QThread, DetailUI):
                         noRuns = 0
                         # 找出迭代次数为0（不执行）的用例
                         for i in range(3, nrows + 1):
-                            if str(self.getValue(file, sheet, i - 1, ex.IterationCol)).upper() == '0':
+                            if f'{ExcelUtil.getValue(file, sheet, i - 1, ex.iterationCol)}'.upper() == '0':
                                 noRuns = noRuns + 1
                         # 全部用例数为各页签的用例数相加减去不执行的用例数
                         ex.allRows = ex.allRows + nrows - 2 - noRuns  # 全部用例数
-                    allRpt = allRpt + str(rpt)
+                    allRpt = allRpt + f'{rpt}'
                 # 模板全部校验通过
                 if allRpt == '':
                     for i in range(len(sheetNames)):
@@ -532,7 +500,7 @@ class debugClass(QThread, DetailUI):
                     if not exa:
                         for i in range(3, nrows + 1):
                             # 迭代次数为0表示此用例不执行
-                            if str(self.getValue(file, sheet, i - 1, ex.IterationCol)) != '0':
+                            if f'{ExcelUtil.getValue(file, sheet, i - 1, ex.iterationCol)}' != '0':
                                 exa.append(i)
                     else:
                         # 是否存在大于当前页签行数的接口号(删除用例引起)
@@ -541,36 +509,36 @@ class debugClass(QThread, DetailUI):
                         en = [item for item in exa if item > nrows]
                     # 如果当前选中的用例(序列号大于nrows)已被删除,则提示
                     if en:
-                        ex.consoleFunc('red', f"用例{en}不存在")
+                        ex.setFonts('red', f"用例{en}不存在")
                     else:
                         for item in exa:
-                            if str(self.getValue(file, sheet, item - 1, ex.IterationCol)) != '0':  # 不执行迭代次数为0的用例
+                            if f'{ExcelUtil.getValue(file, sheet, item - 1, ex.iterationCol)}' != '0':  # 不执行迭代次数为0的用例
                                 dict, tr = ex.run(model, item, sheetName, sheet, nrows, bookRes, sheetRes, fileRes,
                                                   len(exa))
                                 testResult = testResult + tr
             # 格式化html报告中的运行时间和时长
             endTime = datetime.datetime.now()
-            second = str(endTime - startTime)
+            second = f'{endTime - startTime}'
             duration = second[:second.index('.')]
-            dd = duration.split(':')
-            duration = f"{dd[0]}小时 {dd[1]}分 {dd[2]}秒"
+            dtn = duration.split(':')
+            duration = f"{dtn[0]}小时 {dtn[1]}分 {dtn[2]}秒"
             taskName = file[:file.index(".")]
             # 测试结果存到字典中，用于html测试报告
             dict['testName'] = taskName  # 项目名称
-            startTime = str(startTime)
+            startTime = f'{startTime}'
             dict['beginTime'] = startTime[:startTime.index('.')]  # 开始时间
             dict['totalTime'] = duration  # 运行时长
             dict['testResult'] = testResult  # 结果集
-            ex.createHTMLReport(dict)
+            ex.createHTML(dict)
         except Exception as e:
             print(e)
-        ex.status1 = 0  # success
-        ex.status2 = 0  # fail
-        ex.status3 = 0  # skip
+        ex.status1 = 0
+        ex.status2 = 0
+        ex.status3 = 0
         ex.allRows = 0
         self.buttonStatus(True)
         ex.debug.setText('开  始')
-        # 此行代码用于集成jenkins时，当用例执行完毕后自动退出程序
+        # jenkins.py需要加下面1行
         sys.exit()
 
 
@@ -594,7 +562,7 @@ if __name__ == "__main__":
     app.setStyleSheet(QssStyle1)
     ex = DetailUI()
     ex.show()
-    # jenkins需要加以下3行
+    # jenkins.py需要加以下3行
     ex.model2.click()
     ex.getFile()
     ex.start()
