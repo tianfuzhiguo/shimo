@@ -223,17 +223,15 @@ class Http(Util):
         @param files: 上传文件
         @return: r,响应时间,异常信息
         """
-
-        r = ''
-        GET = "self.get(url,body,header)"
-        POST = "self.post(url,body,header,files)"
-        DELETE = "self.delete(url,body,header)"
-        PUT = "self.put(url,body,header,files)"
-        methods = ['GET', 'POST', 'PUT', 'DELETE']
-        methodList = [f'{method}'.upper()] + ExcelUtil.filterList(methods, f'{method}'.upper())  # 把传入的method放到第一个，提高效率
+        key = ['GET', 'POST', 'PUT', 'DELETE']
+        key = [f'{method}'.upper()] + ExcelUtil.filterList(key, f'{method}'.upper())  # 把传入的method放到第一个，提高效率
+        methods = {'GET': 'self.get(url,body,header)',
+                   'POST': 'self.post(url,body,header,files)',
+                   'DELETE': 'self.delete(url,body,header)',
+                   'PUT': 'self.put(url,body,header,files)'}
         msg = ['请求方式异常', self.methodCol]
         try:
-            resp, duration = eval(eval(methodList[0]))
+            resp, duration = eval(methods[key[0]])
         except Exception as e:
             print(e)
             self.getError(e)
@@ -249,11 +247,11 @@ class Http(Util):
         # 如果请求失败，则调用其他请求方式，其他方式有200说明请求方式写错了
         if '200' in f'{resp}':
             return resp, duration, ['']
-        elif '200' in f'{eval(eval(methodList[1]))}':
+        elif '200' in f'{eval(methods[key[1]])}':
             return resp, duration, msg
-        elif '200' in f'{eval(eval(methodList[2]))}':
+        elif '200' in f'{eval(methods[key[2]])}':
             return resp, duration, msg
-        elif '200' in f'{eval(eval(methodList[3]))}':
+        elif '200' in f'{eval(methods[key[3]])}':
             return resp, duration, msg
         else:
             return resp, duration, ['']
