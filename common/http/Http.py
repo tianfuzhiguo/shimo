@@ -264,8 +264,8 @@ class Http(Util):
         return r, duration[:-3]
 
     def post(self, url, body={}, header={}, files=""):
-        # if body != '' and 'application/json' in f'{header}'.lower():
-        #     body = json.dumps(body)
+        if body != {} and 'application/json' in f'{header}'.lower():
+            body = json.dumps(body)
         r = self.res.post(url, data=body, headers=header, files=files, timeout=30)
         duration = f'{r.elapsed.total_seconds()}'
         return r, duration[:-3]
@@ -276,6 +276,8 @@ class Http(Util):
         return r, duration[:-3]
 
     def put(self, url, body={}, header={}, files=""):
+        if body != {} and 'application/json' in f'{header}'.lower():
+            body = json.dumps(body)
         r = self.res.put(url, data=body, headers=header, files=files, timeout=30)
         duration = f'{r.elapsed.total_seconds()}'
         return r, duration[:-3]
