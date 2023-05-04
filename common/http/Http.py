@@ -223,13 +223,12 @@ class Http(Util):
         @param files: 上传文件
         @return: r,响应时间,异常信息
         """
-        key = ['GET', 'POST', 'PUT', 'DELETE']
-        key = [f'{method}'.upper()] + ExcelUtil.filterList(key, f'{method}'.upper())  # 把传入的method放到第一个，提高效率
+        msg = ['请求方式异常', self.methodCol]
         methods = {'GET': 'self.get(url,body,header)',
                    'POST': 'self.post(url,body,header,files)',
                    'DELETE': 'self.delete(url,body,header)',
                    'PUT': 'self.put(url,body,header,files)'}
-        msg = ['请求方式异常', self.methodCol]
+        key = [f'{method}'.upper()] + ExcelUtil.filterList(methods.keys(), f'{method}'.upper())  # 把传入的method放到第一个，提高效率
         try:
             resp, duration = eval(methods[key[0]])
         except Exception as e:
