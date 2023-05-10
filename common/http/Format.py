@@ -2,7 +2,7 @@ from common.http.Http import Http
 from common.utils.Analy import Analy
 from jsonschema import validate
 from time import sleep
-import re, chardet, os, json, datetime, time, demjson3, xmltodict
+import re, chardet, os, json, datetime, time, demjson3, xmltodict, jsonschema, shutil
 
 '''
 @author: dujianxiao
