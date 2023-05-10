@@ -1,6 +1,6 @@
 from common.utils.ExcelUtil import ExcelUtil
 from common.utils.Util import Util
-import re, chardet, os, json, datetime, time, demjson3, xmltodict
+import re, chardet, os, json, datetime, time, demjson3, xmltodict, jsonschema, shutil
 
 '''   
 @获取校验字段和预期结果的原始值和结果值                                                                                                       
