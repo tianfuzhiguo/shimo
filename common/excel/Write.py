@@ -2,7 +2,7 @@ from common.http.Format import Format
 from common.excel.Excel import ExcelData
 from time import sleep
 from jsonschema import validate
-import re, chardet, os, json, datetime, time, demjson3, xmltodict
+import re, chardet, os, json, datetime, time, demjson3, xmltodict, jsonschema, shutil
 
 from common.utils.ExcelUtil import ExcelUtil
 
