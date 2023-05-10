@@ -3,7 +3,7 @@ from common.utils.Util import Util
 from time import sleep
 from jsonschema import validate
 from requests.adapters import HTTPAdapter
-import requests, re, chardet, os, json, datetime, time, demjson3, xmltodict
+import requests, re, chardet, os, json, datetime, time, demjson3, xmltodict, jsonschema, shutil
 
 '''
 @author: dujianxiao
