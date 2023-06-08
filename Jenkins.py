@@ -298,24 +298,6 @@ class DetailUI(Ui_MainWindow, QMainWindow, Write, Report, Template):
             excel = f"r'{path}/result/{reportName}'"
             os.startfile(eval(excel))
 
-    def createHTML(self, js):
-        """
-        创建html测试报告
-        @param js: json格式的测试结果
-        """
-        html = self.resource_path("source/template")
-        with open(html, "r", encoding="utf-8") as f:
-            htmlData = f.read()
-            html = htmlData.replace('${resultData}', f'{js}')
-        file_name = file[:file.index('.xls')]
-        html_file = f"{path}/result/{file_name}-{date}-report.html"
-        if os.path.exists(html_file):
-            os.remove(html_file)
-        htmlReportName = f"{path}/result/{file_name}-{date}-report.html"
-        with open(htmlReportName, 'w', encoding='utf-8') as f:
-            f.write(html)
-        return htmlReportName
-
     def openHtml(self):
         """
         打开html报告
@@ -530,6 +512,7 @@ class debugClass(QThread, DetailUI):
             dict['totalTime'] = duration  # 运行时长
             dict['testResult'] = testResult  # 结果集
             ex.createHTML(dict)
+            self.createHTMLReport(dict, date, path, file)
         except Exception as e:
             print(e)
         ex.status1 = 0
@@ -563,7 +546,7 @@ if __name__ == "__main__":
     ex = DetailUI()
     ex.show()
     # jenkins.py需要加以下3行
-    ex.model2.click()
-    ex.getFile()
-    ex.start()
+    # ex.model2.click()
+    # ex.getFile()
+    # ex.start()
     sys.exit(app.exec_())
