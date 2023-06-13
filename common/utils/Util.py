@@ -222,10 +222,8 @@ class Util(SmLog, Init):
         替换字符串中的用户变量为真实值
         @param string: 需要替换的字符串
         """
-        string = f'{string}'
-        for i in range(len(self.fileData)):
-            if f'${{{self.fileData[i][0]}}}' in string:
-                string = string.replace(f'${{{self.fileData[i][0]}}}', f'{self.fileData[i][1]}')
+        for key, value in self.fileData:
+            string = string.replace(f'${{{key}}}', f'{value}')
         return string
 
     def repRel(self, string):
@@ -233,10 +231,8 @@ class Util(SmLog, Init):
         替换字符串中的接口变量为真实值
         @param string: 需要替换的字符串
         """
-        string = f'{string}'
         for key, value in self.interData.items():
-            if f"${{{key}}}" in f'{string}':
-                string = string.replace(f"${{{key}}}", f'{value}')
+            string = string.replace(f'${{{key}}}', f'{value}')
         return string
 
     def rep(self, file, sheet, row, conn, string):
@@ -248,16 +244,12 @@ class Util(SmLog, Init):
         @param conn: 数据库连接对象
         @param string: 需要替换的字符串
         """
-        dypList = []
         dypar = self.dyparam(file, sheet, row, conn)
-        if dypar is None:
+        if not dypar:
             return string
-        else:
-            for i in range(1, len(dypar) + 1):
-                dypList.append('dyparam' + f'{i}'.zfill(3))
-            for i in range(len(dypar)):
-                if f'${{{dypList[i]}}}' in string:
-                    string = string.replace(f'${{{dypList[i]}}}', f'{dypar[i]}')
+        for i, value in enumerate(dypar, start=1):
+            dyparam = 'dyparam' + f'{i}'.zfill(3)
+            string = string.replace(f'${{{dyparam}}}', f'{value}')
         return string
 
     def repAll(self, string, file, sheet, row, conn):
